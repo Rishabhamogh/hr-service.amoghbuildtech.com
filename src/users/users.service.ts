@@ -10,16 +10,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { Model, Types } from 'mongoose';
 import { createHashValue } from 'src/common/utils/utilities';
-import { LoginDto } from '../auth/auth.dto';
 import { isEmpty } from 'lodash';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserDbService } from './user-db.service';
-import { CacheService } from 'src/shared/cache/cache.service';
-import { Roles } from 'src/common/constants/constants';
+//import { CacheService } from 'src/shared/cache/cache.service';
+//import { Roles } from 'src/common/constants/constants';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
-import { ReloadService } from 'src/startup/reload.service';
+//import { ReloadService } from 'src/startup/reload.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { response } from 'express';
+import { Roles } from 'src/common/constants/constants';
 
 
 @Injectable()
@@ -27,8 +27,8 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
   constructor(
     private dbService: UserDbService,
-    private cacheService: CacheService,
-    private reloadService: ReloadService,
+   // private cacheService: CacheService,
+    //private reloadService: ReloadService,
     //private authGaurd:AuthGuard
   ) { }
 
@@ -88,13 +88,12 @@ export class UsersService {
   }
   async getTeamUnderManager(userId: string) {
     let data: any[] = [];
-    const role: string = await this.cacheService.getRoleById(userId);
+    const role: string = Roles.AGENT//await this.cacheService.getRoleById(userId);
     if (
       role === Roles.AGENT ||
       role === Roles.ADMIN ||
       role === Roles.SUPER_ADMIN
     ) {
-      this.logger.verbose(userId + ' is ' + Roles.AGENT);
       return data;
     }
     const user: any = await this.dbService.getOne({ _id: userId });
@@ -110,7 +109,7 @@ export class UsersService {
     }
 
     for (let idx of team) {
-      const childRole: string = await this.cacheService.getRoleById(idx);
+      const childRole: string ="Agent"// await this.cacheService.getRoleById(idx);
       this.logger.debug('Role of child ' + idx + ' is ' + childRole);
       if (role === Roles.MANAGER || role===Roles.TEAM_LEAD) {
         let users: any[] = await this.getTeamUnderManager(idx);
@@ -125,7 +124,7 @@ export class UsersService {
  
   async getTeamDetails(userId: string) {
     try {
-      const role: string = await this.cacheService.getRoleById(userId);
+       const role: string = Roles.AGENT//await this.cacheService.getRoleById(userId);
       this.logger.debug('Role:' + role);
       if (
         !(
@@ -349,7 +348,7 @@ export class UsersService {
     }
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: any) {
     try {
       if (!(loginDto.emailId || loginDto.mobile)) {
         throw new BadRequestException();
@@ -383,7 +382,7 @@ export class UsersService {
     try {
       const names: any[] = await this.dbService.getArrayByField(
         query,
-        ['name', 'role','managerId','isDeleted','linkedWithManagerId'],
+        ['name', 'role','managerId','isDeleted','linkedWithManagerId',"employeeCode"],
         { "name": 1}
       );
       return names;
@@ -450,7 +449,7 @@ export class UsersService {
   }
 
   async updateUserAndMarketingManager(userId: string, data: any) {
-    let managerId = await this.cacheService.getManagerById(userId)
+    let managerId = "Fsdndf"//await this.cacheService.getManagerById(userId)
    // let team = managerId && await this.cacheService.getTeamByManager(managerId)
     // if (team.length) {
     //   team.forEach(async user => {
@@ -483,7 +482,7 @@ export class UsersService {
       await this.dbService.removeFromArray(id, 'team', userId)
       this.logger.debug('update managerID:', managerId);
    /// await this.dbService.updateOne(userId, { feildTochange : managerId ? managerId : '' })
-      await this.reloadService.loadTeamByManagerId(managerId)
+   //   await this.reloadService.loadTeamByManagerId(managerId)
     }))
     return response
   }

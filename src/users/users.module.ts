@@ -11,8 +11,6 @@ import { ErrorHandlingModule } from 'src/shared/error-handling/error-handling.mo
 import { CacheModule } from 'src/shared/cache/cache.module';
 // import { StartupModule } from 'src/startup/startup.module';
 // import { StartupService } from 'src/startup/startup.service';
-import { ReloadService } from 'src/startup/reload.service';
-import { AccessControlService } from 'src/shared/access-control/access-control.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 
 @Module({
@@ -30,8 +28,6 @@ import { AuthGuard } from 'src/auth/auth.guard';
     UsersService,
     UserDbService,
     // StartupService,
-    ReloadService,
-    AccessControlService,
   ],
   exports: [UsersService], 
 })

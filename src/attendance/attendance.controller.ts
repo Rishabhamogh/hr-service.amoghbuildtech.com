@@ -10,7 +10,7 @@ export class AttendanceController {
 
     @Get()
     async getAttendence(@Query() params:any){
-        let response=await this.attendenceService.getAttendence(params.fromDate,params.toDate,params.userId)
+        let response=await this.attendenceService.getAttendence(params.fromDate,params.toDate,params?.userId, params?.employeeCode)
         return response
     }
 }

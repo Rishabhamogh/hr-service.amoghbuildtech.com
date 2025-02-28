@@ -24,66 +24,24 @@ import { RequestContextService } from 'src/shared/request-context/request-contex
 import { Roles } from 'src/common/constants/constants';
 import { TeamDto } from './dto/team.dto';
 import { CacheService } from 'src/shared/cache/cache.service';
-import { ApiTags, ApiOkResponse, ApiProperty, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
 // import { StartupService } from 'src/startup/startup.service';
 // import { ReloadService } from 'src/startup/reload.service';
-import { AccessControlService } from 'src/shared/access-control/access-control.service';
-import { ReloadService } from 'src/startup/reload.service';
-class CreateUser {
-  @ApiProperty()
-  userId: string;
-  @ApiProperty()
-  name: string;
-  @ApiProperty()
-  mobile: string;
-  @ApiProperty()
-  emailId: string;
-  @ApiProperty()
-  role: string;
-  @ApiProperty()
-  password: string;
-  @ApiProperty()
-  managerId: string;
-  @ApiProperty()
-  team: Array<string>
-  @ApiProperty()
-  createdAt: string
-  @ApiProperty()
-  updatedAt: string
-  @ApiProperty()
-  _id: string
-}
+
+
 @Controller()
-@ApiTags('Users')
+
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(
     private readonly usersService: UsersService,
     private contextService: RequestContextService,
     private cacheService: CacheService,
-    private reloadService: ReloadService,
-    private accessControlService: AccessControlService,
   ) { }
   @UseGuards(AuthGuard)
   @Post('/v1/user')
-  @ApiOkResponse({
-    description: 'User Create sucessfully',
-    type: CreateUser,
-    schema: {
-      allOf: [
-        {
-          properties: {
-            results: {
-              type: 'CreateUser',
-            },
-          },
-        },
-      ],
-    },
-  })
+
   async create(@Body() createUserDto: CreateUserDto) {
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'POST');
     this.logger.log('Request received to add user', createUserDto);
     if (createUserDto?.team) {
       await Promise.all(createUserDto?.team.map(async (userId) => {
@@ -91,43 +49,17 @@ export class UsersController {
       }))
     }
     const response = await this.usersService.create(createUserDto);
-    if (response) await this.reloadService.loadUsers()
-    if (createUserDto?.team?.length) await this.reloadService.loadTeamByManagerId(response._id.toString())
-    if (createUserDto.teamLeadId && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
-      await this.usersService.addToTeam(createUserDto.teamLeadId, [response._id.toString()])
-      await this.reloadService.loadTeamByManagerId(createUserDto.teamLeadId)
-      await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
-
-    }
-    else if ((createUserDto.managerId || !createUserDto.teamLeadId) && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
-      await this.usersService.addToTeam(createUserDto.managerId, [response._id.toString()])
-      await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
-    }
+   
     return response;
   }
   @UseGuards(AuthGuard)
   @Get('/v1/users')
-  @ApiOkResponse({
-    description: 'User details fetch',
-    type: CreateUser,
-    schema: {
-      allOf: [
-        {
-          properties: {
-            results: {
-              type: 'CreateUser',
-            },
-          },
-        },
-      ],
-    },
-  })
+
   async findAll(@Query() params: any) {
     this.logger.log('Request received to find all users');
     const role: string = this.contextService.get('role');
     const userId: string = this.contextService.get('userId');
     let query = {};
-    this.accessControlService.check(role, 'users', 'GET');
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
     const skip: number = pageNumber * limit;
@@ -161,26 +93,11 @@ export class UsersController {
   }
   @UseGuards(AuthGuard)
   @Get('/v1/user/team/:id')
-  @ApiOkResponse({
-    description: 'User details fetch',
-    type: CreateUser,
-    schema: {
-      allOf: [
-        {
-          properties: {
-            results: {
-              type: 'CreateUser',
-            },
-          },
-        },
-      ],
-    },
-  })
+
   async findTeam(@Param('id') id: string) {
     this.logger.log('Request received to find team of userId: ' + id);
     if (!id) throw new BadRequestException("Id is not valid")
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'GET');
     const response = await this.usersService.getTeamDetails(id);
     return response;
   }
@@ -215,7 +132,6 @@ export class UsersController {
   async findOne(@Param('id') id: string) {
     this.logger.log('Request received to find userId', id);
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'GET');
     const response = await this.usersService.findOne({ _id: id });
     return response;
   }
@@ -223,7 +139,6 @@ export class UsersController {
   @Patch('/v1/user/password/reset/:id')
   async resetPassword(@Param('id') userId: string) {
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'PATCH');
     this.logger.log('Request received to reset password for userId: ', userId);
     const response = await this.usersService.resetPassword(userId);
     return response;
@@ -252,13 +167,11 @@ export class UsersController {
   async addToTeam(@Param('id') id: string, @Body() dto: TeamDto) {
     this.logger.log('Request received to update team for userId: ' + id);
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'POST');
     await Promise.all(dto.userIds.map(async (userId) => {
       let managerId = await this.cacheService.getManagerById(userId)
       if (managerId) throw new BadRequestException(`${userId} already in team of manager ${managerId}`)
     }))
     const response = await this.usersService.addToTeam(id, dto.userIds);
-    await this.reloadService.loadTeamByManagerId(id)
     return response;
   }
 
@@ -267,7 +180,7 @@ export class UsersController {
     this.logger.log('check user:' + id);
     let managers = await this.usersService.getUserByFields({ '$or': [{ role: Roles.MANAGER }, { role: Roles.TEAM_LEAD }] }, ['team'], '')
     managers?.map((userId) => {
-      userId?.team.map((item) => {
+      userId?.team.map((item:any) => {
         if (item === id) {
           throw new BadRequestException(`User is Already in team of ${userId._id}`)
         }
@@ -279,54 +192,8 @@ export class UsersController {
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     this.logger.log('Request received to update userId: ' + id);
     let role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'PATCH');
-    if (updateUserDto.managerId || updateUserDto.teamLeadId) {
-      await this.checkUserIfAlreadyPresent(id)
-      await this.cacheService.getRoleById(id)
-      await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
-      await this.reloadService.loadTeamByManagerId(updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId)
-    }
-    if (updateUserDto?.team?.length) {
-      let userPreviusData = await this.usersService.findUser({ _id: id })
-      role= userPreviusData.role
-      let newTeam = updateUserDto.team
-      let managerId = await this.cacheService.getManagerById(id)
-      this.logger.log("previous data",userPreviusData?.team)
-      const removedItems = userPreviusData?.team.filter(item => !newTeam.includes(item));
-      const addedItems = newTeam.filter(item => !userPreviusData?.team.includes(item));
-      this.logger.log("aaded",addedItems)
-      if (addedItems.length) {
-        let managerId = null;
-        if (role === Roles.TEAM_LEAD) {
-          managerId = await this.cacheService.getManagerById(id);
-        }
-        await Promise.all(addedItems.map(async (item) => {
-         await this.checkUserIfAlreadyPresent(item)
-          const updateData = role === Roles.TEAM_LEAD ? { managerId, teamLeadId: id } : { teamLeadId: id };
-          await this.usersService.update(item, updateData);
-        }));
-      }
-      // Handle removed items
-      this.logger.log("remove item",removedItems)
-      if (removedItems.length) {
-        this.logger.log("remove",removedItems)
-        await Promise.all(removedItems.map(async (item:any) => {
-          const updateData = role === Roles.TEAM_LEAD ? { managerId: '', teamLeadId: '' } : { managerId: '' ,teamLeadId: '' };
-          await this.usersService.update(item, updateData);
-        }));
-      }
-      if(role===Roles.TEAM_LEAD){
-        await this.reloadService.loadTeamByManagerId(id)
-        await this.reloadService.loadTeamByManagerId(managerId)
-      }
-      else if (role===Roles.MANAGER){
-        await this.reloadService.loadTeamByManagerId(id)
-      }
-      
-
-    }
+  
     const response = await this.usersService.update(id, updateUserDto);
-    await this.reloadService.updateUser(id)
     return response;
   }
 
@@ -335,7 +202,6 @@ export class UsersController {
   async remove(@Param('id') id: string) {
     this.logger.log('Request received to delete user', id);
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'DELETE');
     const response = await this.usersService.remove(id);
     return response;
   }
@@ -344,9 +210,7 @@ export class UsersController {
   async activate(@Param('id') id: string) {
     this.logger.log('Request received to activate user', id);
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'DELETE');
     const response = await this.usersService.activate(id);
-    await this.reloadService.loadUsers()
     return response;
   }
 
@@ -354,7 +218,6 @@ export class UsersController {
   @Get('/v1/users/names')
   async getNames() {
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'GET');
     this.logger.log('Request received to find names for all users');
     let query = {}
     // query['$or']=[
@@ -402,7 +265,6 @@ export class UsersController {
   async searchAll(@Body() params: SearchUsersDto) {
     this.logger.log('Request received to search in all users');
     const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'SEARCH');
     const userId: string = this.contextService.get('userId');
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
@@ -478,13 +340,6 @@ export class UsersController {
     }
   }
 
-  @UseGuards(AuthGuard)
-  @Get('/v1/log-out-all-devices/:id')
-  async removeFromAllDevices(@Param('id') id: string) {
-
-    let response = []//await  this.usersService.logOutFromAllDevices(id)
-    return response
-
-  }
+  
 
 }
