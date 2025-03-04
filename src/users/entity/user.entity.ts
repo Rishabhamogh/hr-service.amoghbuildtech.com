@@ -7,4 +7,5 @@ export class User {
   role: string;
   team:string[]
   isDeleted:boolean
+  employeeCode:string
 }

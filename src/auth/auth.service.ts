@@ -39,7 +39,9 @@ export class AuthService {
       emailId: user.emailId,
       role:user.role,
       accessToken: accessToken,
-      team:user.team
+      team:user.team,
+      employeeCode:user?.employeeCode
+
     }
   }
 }
