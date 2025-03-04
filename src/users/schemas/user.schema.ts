@@ -52,7 +52,9 @@ export class User {
   @Prop({required:false})
   weekEnds:string[]
   @Prop({required:false})
-  shifts:string[]
+  shiftStartAt:string
+  @Prop({required:false})
+  shiftEndAt:string
 
   @Prop({required:false})
   department:string[]
