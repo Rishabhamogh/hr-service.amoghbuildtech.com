@@ -185,5 +185,6 @@ export enum TaskPriority{
 
 export enum Department{
   PRE_SALES="PRE_SALES",
+  FINANCE="FINANCE"
  
 }

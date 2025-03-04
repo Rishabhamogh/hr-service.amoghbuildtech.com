@@ -41,6 +41,8 @@ export class AuthGuard implements CanActivate {
     this.requestContextService.set<string>('userId', payload.sub);
     this.requestContextService.set<string>('role', payload.role);
     this.requestContextService.set<string>('token', token);
+    this.requestContextService.set<string>('department', payload.department);
+
     return true;
   }
 

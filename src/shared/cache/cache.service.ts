@@ -51,6 +51,7 @@ async getUserAllData(){
       name: user?.name,
       mobile: user?.mobile,
       managerId: user?.managerId,
+      workingHours:user?.workingHours,
       callId:user?.callId
     };
     users[user._id] = data;
@@ -180,7 +181,35 @@ async getUserAllData(){
       return 'NA';
     }
   }
-
+  // async getDetailByEmployeeCodeMachine(employeeCode: string) {
+  //   try {
+  //     let userId: string = await this.cacheManager.get('users');
+  //     if (!str) {
+  //       this.logger.error('Did not get users from cache');
+  //       return '';
+  //     }
+  //     let users: any = JSON.parse(str);
+  //     if (isEmpty(users)) {
+  //       this.logger.error('No user retrieved from cache, returning empty');
+  //       return 'NA';
+  //     }
+  //     if (!isEmpty(users[userId])) {
+  //       this.logger.debug(
+  //         `User details from cache for userId ${userId}:`,
+  //         users[userId],
+  //       );
+  //       return users[userId]?.name;
+  //     }
+  //     this.logger.debug('Returning default name');
+  //     return 'NA';
+  //   } catch (error) {
+  //     this.logger.error(
+  //       `error while fetching name  for userId: ${userId}`,
+  //       error,
+  //     );
+  //     return 'NA';
+  //   }
+  // }
   async getManagerById(userId: string) {
     try {
       this.logger.log('Get manager for userId: ' + userId);

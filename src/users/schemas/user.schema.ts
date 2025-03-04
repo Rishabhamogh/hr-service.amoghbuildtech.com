@@ -33,6 +33,9 @@ export class User {
 
   @Prop({ required: false })
   managerId: string;
+  
+  @Prop({ required: false })
+  machineNumber:string
 
   @Prop({ required: false })
   team: string[];
@@ -44,7 +47,15 @@ export class User {
   teamLeadId:string
 
   @Prop({required:false})
-  department:string
+  workingHours:number
+
+  @Prop({required:false})
+  weekEnds:string[]
+  @Prop({required:false})
+  shifts:string[]
+
+  @Prop({required:false})
+  department:string[]
 
 }
 

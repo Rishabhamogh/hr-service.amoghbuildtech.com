@@ -2,9 +2,12 @@ import { Module } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { AttendanceController } from './attendance.controller';
 import { HttpRequestsModule } from 'src/shared/http-requests/http-requests.module';
+import { RequestContextModule } from 'src/shared/request-context/request-context.module';
+import { CacheModule } from 'src/shared/cache/cache.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports:[HttpRequestsModule],
+  imports:[HttpRequestsModule, RequestContextModule, CacheModule,UsersModule],
   providers: [AttendanceService],
   controllers: [AttendanceController]
 })

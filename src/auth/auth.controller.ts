@@ -11,6 +11,7 @@ export class AuthController {
  
 
   async login(@Body() loginDto: any, @Response() res: any) {
+    console.log("ll",loginDto)
     const response:any = await this.authService.login(loginDto, res);
     res.status(HttpStatus.OK).send(response);
   } 
