@@ -20,6 +20,7 @@ import { RequestContextService } from 'src/shared/request-context/request-contex
 import { AuthGuard } from 'src/auth/auth.guard';
 import { response } from 'express';
 import { Roles } from 'src/common/constants/constants';
+import { CacheService } from 'src/shared/cache/cache.service';
 
 
 @Injectable()
@@ -27,7 +28,7 @@ export class UsersService {
   private readonly logger = new Logger(UsersService.name);
   constructor(
     private dbService: UserDbService,
-   // private cacheService: CacheService,
+   private cacheService: CacheService,
     //private reloadService: ReloadService,
     //private authGaurd:AuthGuard
   ) { }
@@ -88,7 +89,7 @@ export class UsersService {
   }
   async getTeamUnderManager(userId: string) {
     let data: any[] = [];
-    const role: string = Roles.AGENT//await this.cacheService.getRoleById(userId);
+    const role: string = await this.cacheService.getRoleById(userId);
     if (
       role === Roles.AGENT ||
       role === Roles.ADMIN ||
@@ -109,7 +110,7 @@ export class UsersService {
     }
 
     for (let idx of team) {
-      const childRole: string ="Agent"// await this.cacheService.getRoleById(idx);
+      const childRole: string = await this.cacheService.getRoleById(idx);
       this.logger.debug('Role of child ' + idx + ' is ' + childRole);
       if (role === Roles.MANAGER || role===Roles.TEAM_LEAD) {
         let users: any[] = await this.getTeamUnderManager(idx);
@@ -401,7 +402,7 @@ export class UsersService {
     try {
       const users: any[] = await this.dbService.getArrayByField(
         query,
-        ['role', 'emailId', 'name', 'mobile', 'managerId'],
+        ['role', 'emailId', 'name', 'mobile', 'managerId','employeeCode','machineNumber'],
         '',
       );
       return users;

@@ -38,6 +38,15 @@ async getUserAllData(){
   let users: any = JSON.parse(str);
   return users;
 }
+async setCache(key: string, value: any): Promise<void> {
+  await this.cacheManager.set(key, JSON.stringify(value)); // TTL in seconds
+}
+
+// Retrieve data from Redis
+async getCache(key: string): Promise<any> {
+  const data:any = await this.cacheManager.get(key);
+  return data ? JSON.parse(data) : null;
+}
   async setUser(user: any) {
     let str: string = await this.cacheManager.get('users');
     if (!str) {
@@ -52,6 +61,8 @@ async getUserAllData(){
       mobile: user?.mobile,
       managerId: user?.managerId,
       workingHours:user?.workingHours,
+      employeeCode:user?.employeeCode,
+      machineNumber:user?.machineNumber,
       callId:user?.callId
     };
     users[user._id] = data;

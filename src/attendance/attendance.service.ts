@@ -10,43 +10,68 @@ export class AttendanceService {
     constructor(
         private httpService:HttpRequestsService,
         private requestContextService:RequestContextService,
-        private chacheService:CacheService,
+        private cacheService:CacheService,
         private userService:UsersService
     ){}
-async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string){
+async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
 
-let LoginUserId= this.requestContextService.get("userId")
+let LoginUserId:any= this.requestContextService.get("userId")
 let role= this.requestContextService.get("role")
 let department:any= this.requestContextService.get("department")
 let query={}
 
-
+ page =  page || 1;  
+ limit = limit || 10; 
     let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
+    console.log("res",response)
+    function filterData(employeeCodes, serialNumbers) {
+     
+      return response.filter(log => 
+        employeeCodes.map(String).includes(String(log.EmployeeCode)) &&
+        serialNumbers.map(String).includes(String(log.SerialNumber))
+      );
+    }
+if(employeeCode && machineNumber){
+  console.log("employe code",employeeCode)
+ let res= filterData(employeeCode,machineNumber)
+ return res
+}
+
     
   switch(role){
         case Roles.ADMIN:
        
         break;
         case Roles.MANAGER:
-          if( department.includes(Department.FINANCE)){
+          if( department?.includes(Department.FINANCE)){
            
           }
           else{
-          query['generatedBy']=userId
+            console.log("login",LoginUserId)
+            let team=await this.cacheService.getTeamByManager(LoginUserId)
+            console.log("tes",team)
+            let employeeCodes=[] 
+            let serialNumbers=[]
+           await Promise.all(team.map(async(user:any)=>{
+              let userData=await this.cacheService.getUserData(user)
+              console.log("user",userData)
+              employeeCodes.push(userData.employeeCode)
+              serialNumbers.push(userData.machineNumber)
+            }))
+            console.log("uuu",employeeCodes,serialNumbers) 
+            filterData(employeeCodes,serialNumbers)
           }
           break;
         
         case Roles.MARKETING_MANAGER:
-          query['generatedBy']=userId
-          break;
         
         case Roles.AGENT:
           if(department.includes(Department.FINANCE)){
             console.log("AGET finance case 1")
           }
           else{
-          query['generatedBy']=userId
-          }
+
+            }
           break;
         default:
           console.log("default case")
@@ -56,35 +81,49 @@ let query={}
       }
       const UserGroup: Record<string, any> = {};
 
-      // Step 1: Extract unique EmployeeCodes
-      const uniqueEmployeeCodes = [...new Set(response.map(log => log.EmployeeCode))];
-      
-      // Step 2: Fetch user details for all employees before processing logs
+      // Step 1: Extract unique EmployeeCode-MachineNumber keys
+      const uniqueEmployeeKeys = [
+        ...new Set(response.map(log => `${log.EmployeeCode}-${log.MachineNumber}`)),
+      ];
+      const totalEmployees = uniqueEmployeeKeys.length;
+      const totalPages = Math.ceil(totalEmployees / limit);
+      const paginatedKeys = uniqueEmployeeKeys.slice((page - 1) * limit, page * limit);
+      // Step 2: Fetch user details from Redis instead of DB
+      console.log("pp",paginatedKeys)
       const userDetailsMap: Record<string, any> = {};
       
       try {
         await Promise.all(
-          uniqueEmployeeCodes.map(async (code:any) => {
-            try {
-              const user = await this.userService.findOne({ employeeCode: code });
+          paginatedKeys.map(async (key: string) => {
+            const [employeeCode, machineNumber] = key.split('-'); // Extract values
+            const cacheKey = `userDetails:${employeeCode}-${machineNumber}`; // Cache key format
+      
+            let user = await this.cacheService.getCache(cacheKey); // Try Redis first
+      
+            if (!user) {
+              user = await this.userService.findOne({ employeeCode, machineNumber }); // Fetch if not in cache
               if (user) {
-                userDetailsMap[code] = {
-                  weekEnds: user.weekEnds,
-                  workingHours: user.workingHours,
-                  shifts: user.shifts,
-                };
+                await this.cacheService.setCache(cacheKey, user); // Store in Redis for 1 hour
               }
-            } catch (e) {
-              console.error(`Error fetching user details for ${code}:`, e);
+            }
+      
+            if (user) {
+              userDetailsMap[key] = {
+                weekEnds: user.weekEnds,
+                workingHours: user.workingHours,
+                shifts: user.shifts,
+              };
             }
           })
         );
       } catch (e) {
         console.error("Unexpected error fetching user details:", e);
       }
-      
+      const paginatedLogs = response.filter(log =>
+        paginatedKeys.includes(`${log.EmployeeCode}-${log.MachineNumber}`)
+      );
       // Step 3: Process logs after fetching user details
-      for (const log of response) {
+      for (const log of paginatedLogs) {
         const { EmployeeCode, LogDate } = log;
         const logDate = new Date(LogDate).toISOString().split("T")[0]; // YYYY-MM-DD format
       
@@ -109,9 +148,15 @@ let query={}
           (a: any, b: any) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime()
         );
       }
-      
-      return UserGroup;
-      
+    
+     // return ;
+      return {
+        page,
+        limit,
+        totalPages,
+        totalEmployees,
+        data: UserGroup,
+      };
       
     // Return full grouped data
       

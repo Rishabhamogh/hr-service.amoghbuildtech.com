@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { OnDutyModule } from './on-duty/on-duty.module';
 import { LeavesModule } from './leaves/leaves.module';
+import { StartupModule } from './startup/startup.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { LeavesModule } from './leaves/leaves.module';
     AuthModule,
     AttendanceModule,
     OnDutyModule,
-    LeavesModule
+    LeavesModule,
+    StartupModule
     
   ],
   controllers: [AppController],
