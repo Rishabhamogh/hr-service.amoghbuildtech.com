@@ -27,8 +27,8 @@ let query={}
     function filterData(employeeCodes, serialNumbers) {
      
       return response.filter(log => 
-        employeeCodes.map(String).includes(String(log.EmployeeCode)) &&
-        serialNumbers.map(String).includes(String(log.SerialNumber))
+        employeeCodes.map(String).includes(String(log.EmployeeCode)) 
+      // serialNumbers.map(String).includes(String(log.SerialNumber))
       );
     }
 if(employeeCode && machineNumber){
@@ -66,11 +66,14 @@ if(employeeCode && machineNumber){
         case Roles.MARKETING_MANAGER:
         
         case Roles.AGENT:
-          if(department.includes(Department.FINANCE)){
+          if(department?.includes(Department.FINANCE)){
             console.log("AGET finance case 1")
           }
           else{
-
+          
+          //   let userData=await this.cacheService.getUserData(LoginUserId)
+          //  let res= filterData([userData.employeeCode],[userData.machineNumber])
+          //  return res
             }
           break;
         default:
