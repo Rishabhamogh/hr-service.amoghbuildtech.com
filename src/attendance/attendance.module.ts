@@ -6,10 +6,12 @@ import { RequestContextModule } from 'src/shared/request-context/request-context
 import { CacheModule } from 'src/shared/cache/cache.module';
 import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
+import { LeavesModule } from 'src/leaves/leaves.module';
 
 @Module({
   imports:[HttpRequestsModule, RequestContextModule, CacheModule,UsersModule, 
-    JwtModule
+    JwtModule,
+    LeavesModule
   ],
   providers: [AttendanceService],
   controllers: [AttendanceController]

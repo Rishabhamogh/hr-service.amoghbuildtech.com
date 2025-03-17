@@ -23,8 +23,9 @@ export class LeavesController {
         return response 
 
     }
-    @Get('')
-    async getNotification(@Body() params:any){
+    @Get()
+    async getNotification(@Param() params:any){
+      console.log("pp",params)
       const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
     const skip: number = pageNumber*limit;
@@ -33,7 +34,6 @@ export class LeavesController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
-      if(params?.isread) query['read']=params.isread
       let response=  await this.leaveService.findLeaveApplication(skip,
         limit,
         sortKey,

@@ -17,6 +17,7 @@ import { RequestContextModule } from 'src/shared/request-context/request-context
     RequestContextModule
  ],
   providers: [LeavesService, LeaveDbService],
-  controllers: [LeavesController]
+  controllers: [LeavesController],
+  exports:[LeavesService]
 })
 export class LeavesModule {}

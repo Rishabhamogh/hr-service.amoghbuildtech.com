@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 
 export type LeaveApplicationDocument = HydratedDocument<LeaveApplication>;
 
@@ -21,12 +21,19 @@ export class LeaveApplication {
   
   @Prop({ required: false })
   toDate: Date;
+  @Prop({ required: false })
+  startHalf: string;
 
+  @Prop({ required: false })
+  endHalf: string;
+
+  @Prop({ required: false })
+  reason: string;
   @Prop({ required: false })
   duration:string
   
   @Prop({required:false})
-  userId:string
+  userId:mongoose.Types.ObjectId;
 
   @Prop({required:false, default:"PENDING"})
   status:string

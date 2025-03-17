@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Department, Roles } from 'src/common/constants/constants';
+import { LeavesService } from 'src/leaves/leaves.service';
 import { CacheService } from 'src/shared/cache/cache.service';
 import { HttpRequestsService } from 'src/shared/http-requests/http-requests.service';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { UsersService } from 'src/users/users.service';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class AttendanceService {
@@ -11,7 +13,8 @@ export class AttendanceService {
         private httpService:HttpRequestsService,
         private requestContextService:RequestContextService,
         private cacheService:CacheService,
-        private userService:UsersService
+        private userService:UsersService,
+        private leaves:LeavesService
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
 
@@ -24,13 +27,72 @@ let query={}
  limit = limit || 10; 
     let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
     console.log("res",response)
-    function filterData(employeeCodes, serialNumbers) {
-     
-      return response.filter(log => 
-        employeeCodes.map(String).includes(String(log.EmployeeCode)) 
-      // serialNumbers.map(String).includes(String(log.SerialNumber))
-      );
-    }
+    // function filterData(employeeCodes, serialNumbers) {
+    //  if(serialNumbers.length){
+    //   return response.filter(log => 
+    //     employeeCodes.map(String).includes(String(log.EmployeeCode)) && 
+    //    serialNumbers.map(String).includes(String(log.SerialNumber))
+    //   );
+    // }
+    // else{
+    //    let data= response.filter(log => 
+    //     employeeCodes.map(String).includes(String(log.EmployeeCode)))
+    //     return {data}
+    // }
+    // }
+    async function filterData(employeeCodes, serialNumbers) { 
+      let filteredData = {};
+  
+      for (const empCode of employeeCodes) {
+          // Filter logs for the given employeeCode
+          let logs = response
+              .filter(log => String(log.EmployeeCode) === String(empCode) &&
+                  (serialNumbers.length === 0 || serialNumbers.map(String).includes(String(log.SerialNumber))))
+              .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime());
+  
+          // Group logs by date (YYYY-MM-DD format)
+          let groupedLogs = logs.reduce((acc, log) => {
+              let dateKey = log.LogDate.split("T")[0]; // Extract only the date part (YYYY-MM-DD)
+              let logEntry = { ...log, LogDate: dateKey }; // Replace full LogDate with only the date
+              if (!acc[dateKey]) acc[dateKey] = [];
+              acc[dateKey].push(logEntry);
+              return acc;
+          }, {});
+  
+          // Fetch user details from cache or database
+          let userDetails = response.find(log => String(log.EmployeeCode) === String(empCode)) || {};
+          const machineNumber = userDetails.MachineNumber || "default"; // Handle missing MachineNumber
+          const cacheKey = `userDetails:${empCode}-${machineNumber}`;
+  
+          let user = await this.cacheService.getCache(cacheKey); // Try Redis cache first
+  
+          if (!user) {
+              user = await this.userService.findOne({ employeeCode: empCode, machineNumber }); // Fetch from DB
+              if (user) {
+                  await this.cacheService.setCache(cacheKey, user, 3600); // Store in Redis for 1 hour
+              }
+          }
+          let leavesFilter={}
+          leavesFilter['_id']=Types.ObjectId.createFromHexString(user.userId)
+         let leaves=await this.leaves.findAllWithouPagination(leavesFilter)
+          // Store logs and user details inside the employeeCode object
+          filteredData[empCode] = {
+              logs: groupedLogs,
+              leaves,
+              userDetails: {
+                  EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
+                  Name: user?.Name || userDetails.Name,
+                  Department: user?.Department || userDetails.Department,
+                  UserID: user?.UserID || null // Ensure UserID is included
+              }
+          };
+      }
+  
+      return filteredData;
+  }
+  
+  
+  
 if(employeeCode && machineNumber){
   console.log("employe code",employeeCode)
  let res= filterData(employeeCode,machineNumber)
@@ -71,9 +133,9 @@ if(employeeCode && machineNumber){
           }
           else{
           
-          //   let userData=await this.cacheService.getUserData(LoginUserId)
-          //  let res= filterData([userData.employeeCode],[userData.machineNumber])
-          //  return res
+            let userData=await this.cacheService.getUserData(LoginUserId)
+           let res= filterData([userData.employeeCode],[userData.machineNumber])
+           return res
             }
           break;
         default:
