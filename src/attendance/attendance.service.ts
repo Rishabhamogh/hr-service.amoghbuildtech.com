@@ -26,7 +26,6 @@ let query={}
  page =  page || 1;  
  limit = limit || 10; 
     let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
-    console.log("res",response)
     // function filterData(employeeCodes, serialNumbers) {
     //  if(serialNumbers.length){
     //   return response.filter(log => 
@@ -133,9 +132,9 @@ if(employeeCode && machineNumber){
           }
           else{
           
-            let userData=await this.cacheService.getUserData(LoginUserId)
-           let res= filterData([userData.employeeCode],[userData.machineNumber])
-           return res
+          //   let userData=await this.cacheService.getUserData(LoginUserId)
+          //  let res= filterData([userData.employeeCode],[userData.machineNumber])
+          //  return res
             }
           break;
         default:
