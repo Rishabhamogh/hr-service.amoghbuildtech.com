@@ -71,6 +71,8 @@ let query={}
                   await this.cacheService.setCache(cacheKey, user, 3600); // Store in Redis for 1 hour
               }
           }
+          console.log("Res",user)
+          return
           let leavesFilter={}
           leavesFilter['_id']=Types.ObjectId.createFromHexString(user.userId)
          let leaves=await this.leaves.findAllWithouPagination(leavesFilter)
@@ -162,17 +164,24 @@ if(employeeCode && machineNumber){
             const [employeeCode, machineNumber] = key.split('-'); // Extract values
             const cacheKey = `userDetails:${employeeCode}-${machineNumber}`; // Cache key format
       
-            let user = await this.cacheService.getCache(cacheKey); // Try Redis first
+           // let user = await this.cacheService.getCache(cacheKey); // Try Redis first
       
-            if (!user) {
-              user = await this.userService.findOne({ employeeCode, machineNumber }); // Fetch if not in cache
-              if (user) {
-                await this.cacheService.setCache(cacheKey, user); // Store in Redis for 1 hour
-              }
-            }
-      
+            //if (!user) {
+             let user = await this.userService.findOne({ employeeCode }); // Fetch if not in cache
+            //  if (user) {
+              //  await this.cacheService.setCache(cacheKey, user); // Store in Redis for 1 hour
+             // }
+           // }
+            console.log("u",user)
+            
+            let leavesFilter={}
+            let userObject=user._id
+            leavesFilter['userId']= user._id.toString()
+           let leaves=await this.leaves.findAllWithouPagination(leavesFilter)
+           console.log("ll",leaves)
             if (user) {
               userDetailsMap[key] = {
+                leaves,
                 weekEnds: user.weekEnds,
                 workingHours: user.workingHours,
                 shifts: user.shifts,
