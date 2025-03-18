@@ -38,6 +38,11 @@ export class LeaveApplication {
   @Prop({required:false, default:"PENDING"})
   status:string
 
+  @Prop({required:false, default:false})
+  isVerified:boolean
+  @Prop({required:false})
+  approvalAt:Date
+
 
 }
 
