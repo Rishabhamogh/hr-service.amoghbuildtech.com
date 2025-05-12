@@ -60,7 +60,7 @@ export class HttpRequestsService {
         axios
           .get(url,{headers})
           .then((response: any) => {
-            this.logger.debug('Response: ', response.data);
+          //  this.logger.debug('Response: ', response.data);
             resolve(response.data);
           })
           .catch((error) => {

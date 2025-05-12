@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
@@ -46,6 +46,11 @@ export class LeavesController {
      let response=await this.leaveService.updatePermission({_id:id},params)
       return response
     }
+    @Delete('/:id')
+    async lead(@Param('id') id: string){
+     let response=await this.leaveService.delete({_id:id})
+      return response
+    }
     @Post('/create-leave')
     async createLeave(@Body() payload:any){
        let response=await this.leaveService.create(payload)
@@ -68,7 +73,7 @@ export class LeavesController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
-      if(params?.isread) query['read']=params.isread
+      // if(params?.isread) query['read']=params.isread
       let response=  await this.leaveService.findLeaveApplication(skip,
         limit,
         sortKey,

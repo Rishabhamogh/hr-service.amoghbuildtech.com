@@ -188,3 +188,9 @@ export enum Department{
   FINANCE="FINANCE"
  
 }
+export enum LeaveStatus{
+  APPROVED="APPROVED",
+  PENDING="PENDING",
+  REJECT="REJECT"
+ 
+}

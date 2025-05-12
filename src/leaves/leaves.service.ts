@@ -38,7 +38,7 @@ export class LeavesService {
             return response
        
     }
-    async deletePermission(query:any){
+    async delete(query:any){
     
         const response= await this.leaveDbService.deletePermission(query)
         return response

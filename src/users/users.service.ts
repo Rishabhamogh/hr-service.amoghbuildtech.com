@@ -176,7 +176,7 @@ export class UsersService {
 
       const userId: string = response._id.toString();
       response.team = await this.getTeamDetails(userId);
-
+      
       return response;
     } catch (error) {
       this.logger.error('Error in finding one user:', error);
@@ -402,7 +402,7 @@ export class UsersService {
     try {
       const users: any[] = await this.dbService.getArrayByField(
         query,
-        ['role', 'emailId', 'name', 'mobile', 'managerId','employeeCode','machineNumber'],
+        ['role', 'emailId', 'name', 'mobile', 'managerId','employeeCode','machineNumber',"weekEnds","department","shiftEndAt","shiftStartAt"],
         '',
       );
       return users;

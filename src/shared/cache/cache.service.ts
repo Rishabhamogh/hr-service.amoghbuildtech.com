@@ -20,6 +20,15 @@ export class CacheService {
     }
   }
 
+  async setEmployeeCode(users: any) {
+    try {
+      const length: number = Object.keys(users).length;
+      this.logger.log(`Setting ${length} users data to cache`);
+      await this.cacheManager.set('employee', JSON.stringify(users), 0);
+    } catch (error: any) {
+      this.logger.error('Error in setting users in cache', error);
+    }
+  }
   async getUsers() {
     let str: string = await this.cacheManager.get('users');
     if (!str) {
@@ -67,7 +76,12 @@ async getCache(key: string): Promise<any> {
     };
     users[user._id] = data;
 
+    let employeCode:any={}
+    employeCode[user?.employeeCode+'-'+user?.machineNumber]
+    console.log("eee",employeCode)
     await this.cacheManager.set('users', JSON.stringify(users), 0);
+    await this.cacheManager.set('employee', JSON.stringify(employeCode), 0);
+
   }
 
   async getRoleById(userId: string) {
@@ -263,7 +277,6 @@ async getCache(key: string): Promise<any> {
     let teams: any = JSON.parse(str);
     return teams;
   }
-
   async getTeamByManager(managerId: string) {
     try {
       let str: string = await this.cacheManager.get('teams');
@@ -277,6 +290,29 @@ async getCache(key: string): Promise<any> {
       }
       if (teams?.hasOwnProperty(managerId)) {
         return teams[managerId];
+      } else {
+        return [];
+      }
+    } catch (error: any) {
+      this.logger.error('Error in getting team by manager', error);
+      return [];
+    }
+  }
+
+  async getEmployeeUserId(employeCode: string) {
+    try {
+      let str: string = await this.cacheManager.get('employee');
+      console.log("cache str",str)
+      if (!str) {
+        this.logger.error('Did not get teams from cache');
+        return;
+      }
+      let teams: any = JSON.parse(str);
+      if (isEmpty(teams)) {
+        return [];
+      }
+      if (teams?.hasOwnProperty(employeCode)) {
+        return teams[employeCode];
       } else {
         return [];
       }

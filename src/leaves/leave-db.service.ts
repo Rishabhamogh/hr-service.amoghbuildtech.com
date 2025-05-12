@@ -73,7 +73,6 @@ export class LeaveDbService {
     }
     catch(error){
         this.dbErrorService.handle(error)
-
     }
     }
     async findOne(query:any){
@@ -89,7 +88,7 @@ export class LeaveDbService {
 
     async findAllWithoutPagination(query:any){
         try{
-            const response= await this.leaveApplication.find(query)
+            const response= await this.leaveApplication.find(query).exec()
             return response
         }
         catch(error){

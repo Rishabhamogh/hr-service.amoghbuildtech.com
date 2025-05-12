@@ -1,4 +1,85 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { privateDecrypt } from 'crypto';
+import { RequestContextService } from 'src/shared/request-context/request-context.service';
+import { Types } from 'mongoose';
+import { OnDutyService } from './on-duty.service';
 
-@Controller('on-duty')
-export class OnDutyController {}
+@Controller('/onDuty')
+export class OnDutyController {
+    constructor(
+        private onDutyService:OnDutyService,
+        private contextService:RequestContextService,
+
+    ){  }
+    @Post()
+    async create(@Body() payload:any){
+       let response=await this.onDutyService.create(payload)
+       return response
+    }
+    @Get('/:id')
+    async notification(@Param('id') id:any){
+      id= Types.ObjectId.createFromHexString(id)
+      let response=  await this.onDutyService.findOne({userId:id})
+        return response 
+
+    }
+    @Get()
+    async getNotification(@Param() params:any){
+      console.log("pp",params)
+      const pageNumber: number = Number(params?.pageNumber) || 0;
+    const limit: number = Number(params?.size) || 8;
+    const skip: number = pageNumber*limit;
+    const sortKey: string = params?.sortKey || 'createdAt';
+    const sortDir: string = params?.sortDir || 'DESC';
+      let query={}
+       
+      let userId: string = this.contextService.get('userId');
+      let response=  await this.onDutyService.findLeaveApplication(skip,
+        limit,
+        sortKey,
+        sortDir,query)
+        return response 
+
+    }
+    @Patch('/:id')
+    async updateNotification(@Body() params:any, @Param('id') id: string){
+     let response=await this.onDutyService.updatePermission({_id:id},params)
+      return response
+    }
+    @Delete('/:id')
+    async lead(@Param('id') id: string){
+     let response=await this.onDutyService.delete({_id:id})
+      return response
+    }
+
+    @Get('/:id')
+    async getOneLeave(@Param('id') id:any){
+      id= Types.ObjectId.createFromHexString(id)
+      let response=  await this.onDutyService.findOne({userId:id})
+        return response 
+
+    }
+    @Get('')
+    async getLeave(@Body() params:any){
+      const pageNumber: number = Number(params?.pageNumber) || 0;
+    const limit: number = Number(params?.size) || 8;
+    const skip: number = pageNumber*limit;
+    const sortKey: string = params?.sortKey || 'createdAt';
+    const sortDir: string = params?.sortDir || 'DESC';
+      let query={}
+       
+      let userId: string = this.contextService.get('userId');
+      // if(params?.isread) query['read']=params.isread
+      let response=  await this.onDutyService.findLeaveApplication(skip,
+        limit,
+        sortKey,
+        sortDir,query)
+        return response 
+
+    }
+    @Patch('/:id')
+    async updateLeave(@Body() params:any, @Param('id') id: string){
+     let response=await this.onDutyService.updatePermission({_id:id},params)
+      return response
+    }
+}

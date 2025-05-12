@@ -36,6 +36,8 @@ export class StartupService implements OnModuleInit {
     // ]
     let response: any[] = await this.usersService.getUsersData(query);
     let users: any = {};
+    let employeCode:any={}
+
     response.forEach((idx: any) => {
       console.log("iids",idx)
       users[idx._id.toString()] = {
@@ -49,8 +51,16 @@ export class StartupService implements OnModuleInit {
 
 
       };
+      employeCode[idx?.employeeCode+'-'+idx?.machineNumber]={
+        role: idx.role,
+        workingHours:idx?.workingHours,
+        weekEnds:idx?.weekEnds
+      }
+
     }); 
-    await this.cacheService.setUsers(users);
+    //await this.cacheService.setUsers(users);
+    console.log("emp",employeCode)
+    await this.cacheService.setEmployeeCode(employeCode)
   }
 
   // getTeam(data: any[]) { 

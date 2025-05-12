@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-export type UserDocument = HydratedDocument<User>;
+export type OnDutyDocument = HydratedDocument<OnDuty>;
 
 @Schema({ collection: 'onDuty', timestamps: true })
-export class User {
+export class OnDuty {
   @Prop({ required: true })
   name: string;
 
@@ -22,4 +22,4 @@ export class User {
 
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const OnDutySchema = SchemaFactory.createForClass(OnDuty);
