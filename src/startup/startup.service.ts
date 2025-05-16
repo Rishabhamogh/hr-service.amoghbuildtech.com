@@ -58,8 +58,7 @@ export class StartupService implements OnModuleInit {
       }
 
     }); 
-    //await this.cacheService.setUsers(users);
-    console.log("emp",employeCode)
+    await this.cacheService.setUsers(users);
     await this.cacheService.setEmployeeCode(employeCode)
   }
 
