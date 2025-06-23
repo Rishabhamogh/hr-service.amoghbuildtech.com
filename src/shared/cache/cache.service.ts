@@ -72,12 +72,15 @@ async getCache(key: string): Promise<any> {
       workingHours:user?.workingHours,
       employeeCode:user?.employeeCode,
       machineNumber:user?.machineNumber,
+      _id:user?._id,
       callId:user?.callId
     };
     users[user._id] = data;
 
     let employeCode:any={}
     employeCode[user?.employeeCode+'-'+user?.machineNumber]
+    employeCode[user?.employeeCode]
+
     console.log("eee",employeCode)
     await this.cacheManager.set('users', JSON.stringify(users), 0);
     await this.cacheManager.set('employee', JSON.stringify(employeCode), 0);
@@ -302,7 +305,7 @@ async getCache(key: string): Promise<any> {
   async getEmployeeUserId(employeCode: string) {
     try {
       let str: string = await this.cacheManager.get('employee');
-      console.log("cache str",str)
+      // console.log("cache str",str)
       if (!str) {
         this.logger.error('Did not get teams from cache');
         return;

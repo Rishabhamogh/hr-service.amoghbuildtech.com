@@ -7,11 +7,13 @@ import { CacheModule } from 'src/shared/cache/cache.module';
 import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { LeavesModule } from 'src/leaves/leaves.module';
+import { OnDutyModule } from 'src/on-duty/on-duty.module';
 
 @Module({
   imports:[HttpRequestsModule, RequestContextModule, CacheModule,UsersModule, 
     JwtModule,
-    LeavesModule
+    LeavesModule,
+    OnDutyModule
   ],
   providers: [AttendanceService],
   controllers: [AttendanceController]

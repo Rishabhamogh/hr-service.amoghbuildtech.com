@@ -47,14 +47,15 @@ export class StartupService implements OnModuleInit {
         mobile: idx.mobile,
         managerId: idx?.managerId,
         employeeCode:idx?.employeeCode,
-        machineNumber:idx?.machineNumber
-
+        machineNumber:idx?.machineNumber,
+        _id: idx._id
 
       };
-      employeCode[idx?.employeeCode+'-'+idx?.machineNumber]={
+      employeCode[idx?.employeeCode]={
         role: idx.role,
         workingHours:idx?.workingHours,
-        weekEnds:idx?.weekEnds
+        weekEnds:idx?.weekEnds,
+        _id:idx._id,
       }
 
     }); 

@@ -1,24 +1,45 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 
 export type OnDutyDocument = HydratedDocument<OnDuty>;
 
 @Schema({ collection: 'onDuty', timestamps: true })
 export class OnDuty {
-  @Prop({ required: true })
-  name: string;
-
-  @Prop({ required: false })
-  employeeCode: string;
-
-  @Prop({ required: false })
-  managerId: string;
-
-  @Prop({required:false})
-  teamLeadId:string
-
-  @Prop({required:false})
-  department:string
+   @Prop({ required: false })
+    managerId: string;
+    
+    @Prop({ required: false })
+    teamLeadId: string;
+  
+    @Prop({ required: false })
+    type: string;
+  
+    @Prop({ required: false })
+    fromDate: Date;
+    
+    @Prop({ required: false })
+    toDate: Date;
+    @Prop({ required: false })
+    startHalf: string;
+  
+    @Prop({ required: false })
+    endHalf: string;
+  
+    @Prop({ required: false })
+    reason: string;
+    @Prop({ required: false })
+    duration:string
+    
+    @Prop({required:false})
+    userId:mongoose.Types.ObjectId;
+  
+    @Prop({required:false, default:"PENDING"})
+    status:string
+  
+    @Prop({required:false, default:false})
+    isVerified:boolean
+    @Prop({required:false})
+    approvalAt:Date
 
 }
 
