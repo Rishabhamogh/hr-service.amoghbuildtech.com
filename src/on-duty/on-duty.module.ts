@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { OnDuty, OnDutySchema } from './schemas/on-duty.schema';
 import { ErrorHandlingModule } from 'src/shared/error-handling/error-handling.module';
 import { RequestContextModule } from 'src/shared/request-context/request-context.module';
+import { CacheModule } from 'src/shared/cache/cache.module';
 
 @Module({
  imports: [
@@ -13,7 +14,8 @@ import { RequestContextModule } from 'src/shared/request-context/request-context
        { name: OnDuty.name, schema: OnDutySchema },
      ]),
       ErrorHandlingModule,
-      RequestContextModule
+      RequestContextModule,
+      CacheModule
  ],
   providers: [OnDutyService,OnDutyDbService],
   controllers: [OnDutyController],

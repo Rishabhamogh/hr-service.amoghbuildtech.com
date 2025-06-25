@@ -125,7 +125,7 @@ export class UsersService {
  
   async getTeamDetails(userId: string) {
     try {
-       const role: string = Roles.AGENT//await this.cacheService.getRoleById(userId);
+      let role=await this.cacheService.getRoleById(userId);
       this.logger.debug('Role:' + role);
       if (
         !(

@@ -23,6 +23,7 @@ async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:strin
 
 let LoginUserId:any= this.requestContextService.get("userId")
 let role= this.requestContextService.get("role")
+
 let department:any= this.requestContextService.get("department")
 let query={}
 
@@ -136,8 +137,9 @@ try {
           const leaves = await this.leaves.findAllWithouPagination(leavesFilter);
 
           const OnDuty = await this.ODService.findAllWithouPagination(leavesFilter);
-          
+          console.log("onduty",OnDuty)
           // Prepare user details
+          console.log("user",user )
           const userDetail = {
             shifts: user.workingHours,
             EmployeeCode: user?.EmployeeCode || user.employeeCode,

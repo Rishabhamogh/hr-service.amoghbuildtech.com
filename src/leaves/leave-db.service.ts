@@ -32,6 +32,7 @@ export class LeaveDbService {
         sortDir: string,
         query: any = {}){
         try{
+            console.log("query",query)
             const sortObj: any = {
                 [sortKey]: sortDir === 'DESC' ? -1 : 1,
               };
@@ -89,6 +90,7 @@ export class LeaveDbService {
     async findAllWithoutPagination(query:any){
         try{
             const response= await this.leaveApplication.find(query).exec()
+            console.log("response",response)
             return response
         }
         catch(error){

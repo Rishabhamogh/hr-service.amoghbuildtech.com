@@ -30,6 +30,7 @@ export class OnDutyDbService {
         sortDir: string,
         query: any = {}){
         try{
+            console.log("query",query)
             const sortObj: any = {
                 [sortKey]: sortDir === 'DESC' ? -1 : 1,
               };

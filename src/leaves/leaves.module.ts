@@ -7,6 +7,8 @@ import { Leave, LeaveSchema } from './schemas/leave.schema';
 import { LeaveApplication, LeaveApplicationSchema } from './schemas/leaves-application.schema';
 import { ErrorHandlingModule } from 'src/shared/error-handling/error-handling.module';
 import { RequestContextModule } from 'src/shared/request-context/request-context.module';
+import { CacheModule } from 'src/shared/cache/cache.module';
+import { JwtModule } from '@nestjs/jwt';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -14,6 +16,8 @@ import { RequestContextModule } from 'src/shared/request-context/request-context
       { name: LeaveApplication.name, schema: LeaveApplicationSchema },
     ]),
     ErrorHandlingModule,
+    CacheModule,
+    JwtModule,
     RequestContextModule
  ],
   providers: [LeavesService, LeaveDbService],

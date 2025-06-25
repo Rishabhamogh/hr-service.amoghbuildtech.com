@@ -3,12 +3,15 @@ import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
 import { OnDutyService } from './on-duty.service';
+import { Roles } from 'src/common/constants/constants';
+import { CacheService } from 'src/shared/cache/cache.service';
 
 @Controller('/onDuty')
 export class OnDutyController {
     constructor(
         private onDutyService:OnDutyService,
         private contextService:RequestContextService,
+        private cacheService:CacheService
 
     ){  }
     @Post()
@@ -34,6 +37,43 @@ export class OnDutyController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
+      let role: string = this.contextService.get('role');
+      console.log("role",role)
+      console.log("userId",userId)
+    if (params?.startTime) {
+      const startTime = params.startTime;
+      let endTime = new Date().toISOString();
+      if (params?.endTime) {
+        endTime = params.endTime;
+      }
+      const value: any = {
+        $gte: new Date(startTime),
+        $lt: new Date(endTime),
+      };
+      query['createdAt'] = value;
+    }
+
+        switch (role) {            
+            case Roles.MANAGER:
+              case Roles.TEAM_LEAD:
+              {
+                let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+                const objectIds = userIds.map(id => new Types.ObjectId(id));
+                objectIds.push(new Types.ObjectId(userId));
+                userIds.push(userId);
+                query['userId']={$in:objectIds }
+              }
+              break;
+            case Roles.AGENT: {
+             query['userId']=userId
+      
+            }
+            default:{
+      // query['userId']=params.userId
+
+            }
+           
+          }
       let response=  await this.onDutyService.findLeaveApplication(skip,
         limit,
         sortKey,

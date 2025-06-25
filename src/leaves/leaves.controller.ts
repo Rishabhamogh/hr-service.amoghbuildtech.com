@@ -1,14 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
 import { LeavesService } from './leaves.service';
+import { Roles } from 'src/common/constants/constants';
+import { CacheService } from 'src/shared/cache/cache.service';
+import { AuthGuard } from 'src/auth/auth.guard';
 
+@UseGuards(AuthGuard)
 @Controller('/leaves')
 export class LeavesController {
     constructor(
         private leaveService:LeavesService,
-        private contextService:RequestContextService
+        private contextService:RequestContextService,
+        private cacheService:CacheService,
 
     ){  }
     @Post('/create-application')
@@ -23,7 +28,7 @@ export class LeavesController {
         return response 
 
     }
-    @Get()
+    @Get("/search")
     async getNotification(@Param() params:any){
       console.log("pp",params)
       const pageNumber: number = Number(params?.pageNumber) || 0;
@@ -63,7 +68,7 @@ export class LeavesController {
         return response 
 
     }
-    @Get('')
+    @Get()
     async getLeave(@Body() params:any){
       const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
@@ -73,7 +78,45 @@ export class LeavesController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
-      // if(params?.isread) query['read']=params.isread
+      let role: string = this.contextService.get('role');
+
+      if (params?.startTime) {
+      const startTime = params.startTime;
+      let endTime = new Date().toISOString();
+      if (params?.endTime) {
+        endTime = params.endTime;
+      }
+      const value: any = {
+        $gte: new Date(startTime),
+        $lt: new Date(endTime),
+      };
+      query['createdAt'] = value;
+    }
+
+    console.log("role",role)
+        console.log("useId",userId)
+
+       switch (role) {            
+            case Roles.MANAGER:
+              case Roles.TEAM_LEAD:
+              {
+                let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+                const objectIds = userIds.map(id => new Types.ObjectId(id));
+                objectIds.push(new Types.ObjectId(userId));
+                userIds.push(userId);
+                query['userId']={$in:objectIds }
+              }
+              break;
+            case Roles.AGENT: {
+             query['userId']=new Types.ObjectId(userId)
+      
+            }
+            default:{
+      // query['userId']=new Types.ObjectId(userId)
+
+            }
+          
+          }
       let response=  await this.leaveService.findLeaveApplication(skip,
         limit,
         sortKey,
