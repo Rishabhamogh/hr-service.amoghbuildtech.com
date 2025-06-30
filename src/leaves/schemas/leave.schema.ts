@@ -14,11 +14,11 @@ export class Leave {
   teamLeadId: string;
 
   @Prop({required:false})
-  totalLeaves:string
+  totalLeaves:number
   @Prop({required:false})
   type:string
-  @Prop({required:false})
-  approvedLeaves:string
+  // @Prop({required:false})
+  // approvedLeaves:string
   @Prop({required:false})
   userId:string
 

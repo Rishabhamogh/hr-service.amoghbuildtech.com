@@ -130,7 +130,7 @@ try {
           // Fetch user's approved leaves
           const leavesFilter = {};
           leavesFilter['userId']=Types.ObjectId.createFromHexString(user?._id)
-          leavesFilter['status']=LeaveStatus.APPROVED
+          // leavesFilter['status']=LeaveStatus.APPROVED
           leavesFilter['fromDate'] = { $gte: new Date(fromDate) };
           leavesFilter['toDate'] = { $lte: new Date(toDate) }; 
           
@@ -278,7 +278,7 @@ console.log("emd",employeeCodes,serialNumbers)
       if(user){
       let leavesFilter={}
       leavesFilter['userId']=Types.ObjectId.createFromHexString(user?._id)
-      leavesFilter['status']=LeaveStatus.APPROVED
+      // leavesFilter['status']=LeaveStatus.APPROVED
       leavesFilter['fromDate'] = { $gte: new Date(fromDate) };
       leavesFilter['toDate'] = { $lte: new Date(toDate) };
 
@@ -296,7 +296,9 @@ console.log("emd",employeeCodes,serialNumbers)
               EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
               Name: user?.Name || userDetails.Name,
               Department: user?.Department || userDetails.Department,
-              UserId: user?.UserId || null // Ensure UserID is included
+              UserId: user?.UserId || null, // Ensure UserID is included
+               weekEnds: user?.weekEnds
+
           }
       };
     }

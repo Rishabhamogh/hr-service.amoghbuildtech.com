@@ -7,6 +7,7 @@ import { OnDuty, OnDutySchema } from './schemas/on-duty.schema';
 import { ErrorHandlingModule } from 'src/shared/error-handling/error-handling.module';
 import { RequestContextModule } from 'src/shared/request-context/request-context.module';
 import { CacheModule } from 'src/shared/cache/cache.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
  imports: [
@@ -15,7 +16,8 @@ import { CacheModule } from 'src/shared/cache/cache.module';
      ]),
       ErrorHandlingModule,
       RequestContextModule,
-      CacheModule
+      CacheModule,
+      JwtModule
  ],
   providers: [OnDutyService,OnDutyDbService],
   controllers: [OnDutyController],

@@ -1,11 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
 import { OnDutyService } from './on-duty.service';
 import { Roles } from 'src/common/constants/constants';
 import { CacheService } from 'src/shared/cache/cache.service';
+import { AuthGuard } from 'src/auth/auth.guard';
 
+@UseGuards(AuthGuard)
 @Controller('/onDuty')
 export class OnDutyController {
     constructor(
@@ -64,8 +66,9 @@ export class OnDutyController {
                 query['userId']={$in:objectIds }
               }
               break;
-            case Roles.AGENT: {
-             query['userId']=userId
+            case Roles.AGENT:
+             case Roles.LEAD_MANAGER:  {
+             query['userId']=new Types.ObjectId(userId)
       
             }
             default:{
