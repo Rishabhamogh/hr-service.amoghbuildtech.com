@@ -19,6 +19,11 @@ export class LeavesService {
             return response
     }
         
+     async createLeave(payload: any) {
+        payload['userId']= Types.ObjectId.createFromHexString(payload.userId)
+        const response = await this.leaveDbService.saveLeave(payload)
+            return response
+    }
     
 
     async findLeaveApplication(skip: number,
@@ -27,6 +32,18 @@ export class LeavesService {
         sortDir: string, 
         query:any){
        let response=await this.leaveDbService.findAll(skip,
+        limit,
+        sortKey,
+        sortDir, 
+        query)
+       return response
+    }
+     async findLeave(skip: number,
+        limit: number,
+        sortKey: string,
+        sortDir: string, 
+        query:any){
+       let response=await this.leaveDbService.findAllLeave(skip,
         limit,
         sortKey,
         sortDir, 

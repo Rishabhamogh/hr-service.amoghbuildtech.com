@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
@@ -21,14 +21,14 @@ export class LeavesController {
        let response=await this.leaveService.create(payload)
        return response
     }
-    @Get('/:id')
-    async notification(@Param('id') id:any){
-      id= Types.ObjectId.createFromHexString(id)
-      let response=  await this.leaveService.findOne({userId:id})
-        return response 
+    // @Get('/:id')
+    // async notification(@Param('id') id:any){
+    //   id= Types.ObjectId.createFromHexString(id)
+    //   let response=  await this.leaveService.findOne({userId:id})
+    //     return response 
 
-    }
-    @Get("/search")
+    // }
+    @Get("/application")
     async getNotification(@Param() params:any){
       console.log("pp",params)
       const pageNumber: number = Number(params?.pageNumber) || 0;
@@ -39,6 +39,7 @@ export class LeavesController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
+    // if(params?.userId)  query['userId'] = new Types.ObjectId(userId); 
       let response=  await this.leaveService.findLeaveApplication(skip,
         limit,
         sortKey,
@@ -58,7 +59,7 @@ export class LeavesController {
     }
     @Post('/create-leave')
     async createLeave(@Body() payload:any){
-       let response=await this.leaveService.create(payload)
+       let response=await this.leaveService.createLeave(payload)
        return response
     }
     @Get('/:id')
@@ -69,7 +70,7 @@ export class LeavesController {
 
     }
     @Get()
-    async getLeave(@Body() params:any){
+    async getLeave(@Query() params:any){
       const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
     const skip: number = pageNumber*limit;
@@ -95,29 +96,32 @@ export class LeavesController {
 
     console.log("role",role)
         console.log("useId",userId)
-
-       switch (role) {            
-            case Roles.MANAGER:
-              case Roles.TEAM_LEAD:
-              {
-                let userIds: string[] = await this.cacheService.getTeamByManager(userId);
-                const objectIds = userIds.map(id => new Types.ObjectId(id));
-                objectIds.push(new Types.ObjectId(userId));
-                userIds.push(userId);
-                query['userId']={$in:objectIds }
-              }
-              break;
-            case Roles.AGENT: {
-             query['userId']=new Types.ObjectId(userId)
+      query['userId'] = new Types.ObjectId(userId);
+      //  switch (role) {            
+      //       case Roles.MANAGER:
+      //         case Roles.TEAM_LEAD:
+      //         {
+      //           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+      //           const objectIds = userIds.map(id => new Types.ObjectId(id));
+      //           objectIds.push(new Types.ObjectId(userId));
+      //           userIds.push(userId);
+      //           query['userId']={$in:objectIds }
+      //         }
+      //         break;
+      //       case Roles.AGENT: {
+      //        query['userId']=new Types.ObjectId(userId)
       
-            }
-            default:{
-      // query['userId']=new Types.ObjectId(userId)
+      //       }
+      //       default:{
+      // // query['userId']=new Types.ObjectId(userId)
 
-            }
+      //       }
           
-          }
-      let response=  await this.leaveService.findLeaveApplication(skip,
+      //     }
+      if(params?.userId){
+        query['userId'] = new Types.ObjectId(params.userId.toString());
+      }
+      let response=  await this.leaveService.findLeave(skip,
         limit,
         sortKey,
         sortDir,query)

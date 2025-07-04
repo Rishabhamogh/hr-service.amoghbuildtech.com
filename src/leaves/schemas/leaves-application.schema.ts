@@ -3,7 +3,7 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export type LeaveApplicationDocument = HydratedDocument<LeaveApplication>;
 
-@Schema({ collection: 'leaves-application', timestamps: true })
+@Schema({ collection: 'leavesApplication', timestamps: true })
 export class LeaveApplication {
   
  

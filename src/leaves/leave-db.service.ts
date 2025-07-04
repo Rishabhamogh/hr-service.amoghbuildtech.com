@@ -114,8 +114,9 @@ export class LeaveDbService {
         limit: number,
         sortKey: string,
         sortDir: string,
-        query: any = {}){
+        query: any ){
         try{
+            console.log("query",query)
             const sortObj: any = {
                 [sortKey]: sortDir === 'DESC' ? -1 : 1,
               };
