@@ -3,7 +3,7 @@ import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
 import { OnDutyService } from './on-duty.service';
-import { Roles } from 'src/common/constants/constants';
+import { Department, Roles } from 'src/common/constants/constants';
 import { CacheService } from 'src/shared/cache/cache.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 
@@ -39,6 +39,8 @@ export class OnDutyController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
+       let department: string = this.contextService.get('department');
+
       let role: string = this.contextService.get('role');
       console.log("role",role)
       console.log("userId",userId)
@@ -55,19 +57,27 @@ export class OnDutyController {
       query['createdAt'] = value;
     }
 
-        switch (role) {            
+        switch (role) {    
+                  
             case Roles.MANAGER:
               case Roles.TEAM_LEAD:
               {
+                if(department==Department.HR){
+
+              }
+              else{
                 let userIds: string[] = await this.cacheService.getTeamByManager(userId);
                 const objectIds = userIds.map(id => new Types.ObjectId(id));
                 objectIds.push(new Types.ObjectId(userId));
                 userIds.push(userId);
                 query['userId']={$in:objectIds }
               }
+              }
               break;
-            case Roles.AGENT:
-             case Roles.LEAD_MANAGER:  {
+            case Roles.AGENT:{
+              if(department==Department.HR){
+
+              }
              query['userId']=new Types.ObjectId(userId)
       
             }

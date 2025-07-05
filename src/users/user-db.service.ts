@@ -86,7 +86,7 @@ export class UserDbService {
 
   async updateOne(id: string, payload: any) {
     try {
-      const user = await this.users.updateOne({ _id: id }, { $set: payload });
+      const user = await this.users.updateOne({ _id: id }, { $set: payload }, {new: true });
       return user;
     } catch (error: any) {
       this.dbErrorService.handle(error);

@@ -198,6 +198,7 @@ export class UsersService {
         JSON.stringify(updateUserDto),
       );
       let response = await this.dbService.updateOne(id, updateUserDto);
+      this.cacheService.setUser(response)
       return response;
     } catch (error) {
       this.logger.error('Error in updating user:', error);
