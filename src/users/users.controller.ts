@@ -21,7 +21,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { SearchUsersDto } from './dto/search-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
-import { Roles } from 'src/common/constants/constants';
+import { Department, Roles } from 'src/common/constants/constants';
 import { TeamDto } from './dto/team.dto';
 import { CacheService } from 'src/shared/cache/cache.service';
 // import { StartupService } from 'src/startup/startup.service';
@@ -109,6 +109,8 @@ export class UsersController {
     this.logger.log('Request received to get logged in user details');
     let role = this.contextService.get('role')
     let userId: string = this.contextService.get('userId')
+    let department= this.contextService.get('department')
+    console.log("department",department)
     switch (role) {
       case Roles.LEAD_MANAGER: {
         userId = await this.cacheService.getManagerById(userId)
@@ -118,13 +120,16 @@ export class UsersController {
         return {
           userId,
           role,
-          team
+          team,
+          department
         }
       }
     }
     return {
       userId: this.contextService.get('userId'),
       role: this.contextService.get('role'),
+      department: this.contextService.get('department'),
+
     }
   }
   @UseGuards(AuthGuard)

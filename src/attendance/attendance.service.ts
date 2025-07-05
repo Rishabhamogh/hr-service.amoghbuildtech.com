@@ -47,7 +47,7 @@ if(employeeCode && machineNumber){
         case Roles.MANAGER:
         case Roles.TEAM_LEAD:
 
-          if( department?.includes(Department.FINANCE)){
+          if( department?.includes(Department.HR)){
            
           }
           else{
@@ -71,7 +71,7 @@ if(employeeCode && machineNumber){
         case Roles.MARKETING_MANAGER:
         
         case Roles.AGENT:
-          if(department?.includes(Department.FINANCE)){
+          if(department?.includes(Department.HR)){
             console.log("AGET finance case 1")
           }
           else{

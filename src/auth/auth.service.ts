@@ -4,7 +4,8 @@ import { User } from 'src/users/entity/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { createHashValue } from 'src/common/utils/utilities';
 import { ConfigService } from '@nestjs/config';
-
+import { Department } from 'src/common/constants/constants';
+import * as moment from 'moment';
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,7 +29,9 @@ export class AuthService {
       emailId: user.emailId,
       mobile: user.mobile,
       role: user.role,
-      // exp: moment().add(this.configService.get('auth.tokenExpiry'),'minutes').unix()
+      // exp: moment().add(this.configService.get('auth.tokenExpiry'),'minutes').unix(),
+       department:user?.department ?user?.department:[Department.FINANCE]
+
     };
     const accessToken: string = await this.jwtService.signAsync(payload);
     res.setHeader('x-access-token',accessToken);
@@ -40,7 +43,9 @@ export class AuthService {
       role:user.role,
       accessToken: accessToken,
       team:user.team,
-      employeeCode:user?.employeeCode
+      employeeCode:user?.employeeCode,
+       department:user?.department
+
 
     }
   }

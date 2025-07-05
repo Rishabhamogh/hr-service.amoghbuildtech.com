@@ -8,4 +8,5 @@ export class User {
   team:string[]
   isDeleted:boolean
   employeeCode:string
+  department:string
 }

@@ -3,7 +3,7 @@ import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
 import { LeavesService } from './leaves.service';
-import { Roles } from 'src/common/constants/constants';
+import { Department, Roles } from 'src/common/constants/constants';
 import { CacheService } from 'src/shared/cache/cache.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 
@@ -39,7 +39,55 @@ export class LeavesController {
       let query={}
        
       let userId: string = this.contextService.get('userId');
+      let department: string = this.contextService.get('department');
+      let role: string = this.contextService.get('role');
+
+
     // if(params?.userId)  query['userId'] = new Types.ObjectId(userId); 
+     switch(role){
+            case Roles.ADMIN:
+           console.log("ADMIN")
+            break;
+            case Roles.MANAGER:
+            case Roles.TEAM_LEAD:
+    
+              if( department?.includes(Department.HR)){
+               
+              }
+              else{
+                let team=await this.cacheService.getTeamByManager(userId)
+                console.log("tes",team)
+                let employeeCodes=[] 
+                let serialNumbers=[]
+               await Promise.all(team.map(async(user:any)=>{
+                  let userData=await this.cacheService.getUserData(user)
+                  console.log("user",userData)
+                  employeeCodes.push(userData.employeeCode)
+                  serialNumbers.push(userData.machineNumber)
+                }))
+                console.log("uuu",employeeCodes,serialNumbers) 
+              
+              }
+              break;
+            
+            case Roles.MARKETING_MANAGER:
+            
+            case Roles.AGENT:
+              if(department?.includes(Department.HR)){
+                console.log("AGET finance case 1")
+              }
+              else{
+
+                  query['userId']= new Types.ObjectId(userId)
+
+                }
+              break;
+            default:
+              console.log("default case")
+    
+              query['userId']=userId
+            break
+          }
       let response=  await this.leaveService.findLeaveApplication(skip,
         limit,
         sortKey,
@@ -97,27 +145,27 @@ export class LeavesController {
     console.log("role",role)
         console.log("useId",userId)
       query['userId'] = new Types.ObjectId(userId);
-      //  switch (role) {            
-      //       case Roles.MANAGER:
-      //         case Roles.TEAM_LEAD:
-      //         {
-      //           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
-      //           const objectIds = userIds.map(id => new Types.ObjectId(id));
-      //           objectIds.push(new Types.ObjectId(userId));
-      //           userIds.push(userId);
-      //           query['userId']={$in:objectIds }
-      //         }
-      //         break;
-      //       case Roles.AGENT: {
-      //        query['userId']=new Types.ObjectId(userId)
+       switch (role) {            
+            case Roles.MANAGER:
+              case Roles.TEAM_LEAD:
+              {
+                let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+                const objectIds = userIds.map(id => new Types.ObjectId(id));
+                objectIds.push(new Types.ObjectId(userId));
+                userIds.push(userId);
+                query['userId']={$in:objectIds }
+              }
+              break;
+            case Roles.AGENT: {
+             query['userId']=new Types.ObjectId(userId)
       
-      //       }
-      //       default:{
-      // // query['userId']=new Types.ObjectId(userId)
+            }
+            default:{
+      // query['userId']=new Types.ObjectId(userId)
 
-      //       }
+            }
           
-      //     }
+          }
       if(params?.userId){
         query['userId'] = new Types.ObjectId(params.userId.toString());
       }
