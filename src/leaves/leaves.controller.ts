@@ -178,7 +178,7 @@ export class LeavesController {
     }
     @Patch('add/:id')
     async addInArray(@Body() params:any, @Param('id') id: string){
-     let response=await this.leaveService.addInArray(id,params?.feild,params.value)
+     let response=await this.leaveService.addInArray(id,params?.field,params.value)
       return response
     }
 }
