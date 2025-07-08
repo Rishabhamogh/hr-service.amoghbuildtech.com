@@ -9,13 +9,13 @@ import { OnDuty } from "./schemas/on-duty.schema";
 export class OnDutyDbService {
     constructor(
         
-        @InjectModel(OnDuty.name) private leaveApplication: Model<OnDuty>,
+        @InjectModel(OnDuty.name) private onDuty: Model<OnDuty>,
         private dbErrorService: DatabaseErrorService,
     ) { }
 
     async save(createLeave: any) {
         try{
-        const onDuty = new this.leaveApplication(createLeave)
+        const onDuty = new this.onDuty(createLeave)
         const response = await onDuty.save()
             return response
         }
@@ -34,11 +34,11 @@ export class OnDutyDbService {
             const sortObj: any = {
                 [sortKey]: sortDir === 'DESC' ? -1 : 1,
               };
-              const totalItems: number = await this.leaveApplication
+              const totalItems: number = await this.onDuty
                 .countDocuments(query)
                 .exec();
               const totalPages: number = Math.floor((totalItems - 1) / limit) + 1;
-              const properties = await this.leaveApplication
+              const properties = await this.onDuty
                 .find(query)
                 .skip(skip)
                 .limit(limit)
@@ -57,7 +57,7 @@ export class OnDutyDbService {
     }
     async update(filter:any,query:any){
         try{
-            const response= await this.leaveApplication.updateOne(filter,query)
+            const response= await this.onDuty.updateOne(filter,query)
             return response
         }
         catch(error){
@@ -67,7 +67,7 @@ export class OnDutyDbService {
     }
     async delete(query:any){
     try{
-        const response= await this.leaveApplication.deleteMany(query)
+        const response= await this.onDuty.deleteMany(query)
         return response
     }
     catch(error){
@@ -76,7 +76,7 @@ export class OnDutyDbService {
     }
     async findOne(query:any){
         try{
-            const response= await this.leaveApplication.findOne(query)
+            const response= await this.onDuty.findOne(query)
             return response
         }
         catch(error){
@@ -87,7 +87,7 @@ export class OnDutyDbService {
 
     async findAllWithoutPagination(query:any){
         try{
-            const response= await this.leaveApplication.find(query).exec()
+            const response= await this.onDuty.find(query).exec()
             return response
         }
         catch(error){

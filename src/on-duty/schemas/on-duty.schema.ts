@@ -26,7 +26,7 @@ export class OnDuty {
     endHalf: string;
   
     @Prop({ required: false })
-    reason: string;
+    reason: [string];
     @Prop({ required: false })
     duration:string
     

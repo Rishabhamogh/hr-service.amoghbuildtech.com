@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { DatabaseErrorService } from "src/shared/error-handling/database-error.service";
@@ -8,6 +8,8 @@ import { LeaveDbService } from "./leave-db.service";
 
 @Injectable()
 export class LeavesService {
+      private readonly logger = new Logger(LeavesService.name);
+
     constructor(
        private leaveDbService:LeaveDbService
     
@@ -24,7 +26,22 @@ export class LeavesService {
         const response = await this.leaveDbService.saveLeave(payload)
             return response
     }
-    
+    async addInArray(id: string, field: string, value: any) {
+    try {
+      let payload: any = { $push: { [field]: value } };
+      let response = await this.leaveDbService.update({_id:id}, payload);
+      return response;
+    } catch (error) {
+      this.logger.error('Error in adding in array:', error);
+      switch (error.name) {
+        case 'InternalServerError':
+          throw new BadRequestException(error.message || JSON.stringify(error));
+        default:
+          throw error;
+      }
+    }
+  }
+
 
     async findLeaveApplication(skip: number,
         limit: number,
@@ -51,7 +68,7 @@ export class LeavesService {
        return response
     }
     async updatePermission(filter:any,payload:any){
-            const response= await this.leaveDbService.updatePermission(filter, { $set: payload })
+            const response= await this.leaveDbService.update(filter, { $set: payload })
             return response
        
     }

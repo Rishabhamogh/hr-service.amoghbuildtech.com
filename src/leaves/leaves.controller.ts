@@ -176,9 +176,9 @@ export class LeavesController {
         return response 
 
     }
-    @Patch('/:id')
-    async updateLeave(@Body() params:any, @Param('id') id: string){
-     let response=await this.leaveService.updatePermission({_id:id},params)
+    @Patch('add/:id')
+    async addInArray(@Body() params:any, @Param('id') id: string){
+     let response=await this.leaveService.addInArray(id,params?.feild,params.value)
       return response
     }
 }

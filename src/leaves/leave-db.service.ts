@@ -57,7 +57,7 @@ export class LeaveDbService {
          this.dbErrorService.handle(error)
         }
     }
-    async updatePermission(filter:any,query:any){
+    async update(filter:any,query:any){
         try{
             const response= await this.leaveApplication.updateOne(filter,query)
             return response

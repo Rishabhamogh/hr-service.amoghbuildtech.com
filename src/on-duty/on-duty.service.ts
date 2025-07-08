@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { DatabaseErrorService } from "src/shared/error-handling/database-error.service";
@@ -8,6 +8,8 @@ import { OnDutyDbService } from "./on-duty-db.service";
 
 @Injectable()
 export class OnDutyService {
+          private readonly logger = new Logger(OnDutyService.name);
+    
     constructor(
        private leaveDbService:OnDutyDbService
     
@@ -53,5 +55,19 @@ export class OnDutyService {
         let response=await this.leaveDbService.findAllWithoutPagination(query)
         return response
     }
-
+   async addInArray(id: string, field: string, value: any) {
+    try {
+      let payload: any = { $push: { [field]: value } };
+      let response = await this.leaveDbService.update({_id:id}, payload);
+      return response;
+    } catch (error) {
+      this.logger.error('Error in adding in array:', error);
+      switch (error.name) {
+        case 'InternalServerError':
+          throw new BadRequestException(error.message || JSON.stringify(error));
+        default:
+          throw error;
+      }
+    }
+  }
 }
