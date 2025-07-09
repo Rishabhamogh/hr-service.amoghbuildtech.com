@@ -55,9 +55,9 @@ export class OnDutyService {
         let response=await this.leaveDbService.findAllWithoutPagination(query)
         return response
     }
-   async addInArray(id: string, field: string, value: any) {
+   async addInArray(id: string, field: string, value: any,userId: string) {
     try {
-      let payload: any = { $push: { [field]: value } };
+      let payload: any = { $push: { [field]: {value,userId } }}
       let response = await this.leaveDbService.update({_id:id}, payload);
       return response;
     } catch (error) {

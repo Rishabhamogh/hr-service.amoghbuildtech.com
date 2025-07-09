@@ -1,8 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 
 export type OnDutyDocument = HydratedDocument<OnDuty>;
 
+export class Feedback {
+  @Prop({ required: true })
+  value: string;
+
+  @Prop()
+  userId: string;
+
+  @Prop({ default: Date.now() })
+  createdAt: Date;
+}
 @Schema({ collection: 'onDuty', timestamps: true })
 export class OnDuty {
    @Prop({ required: false })
@@ -24,9 +34,11 @@ export class OnDuty {
   
     @Prop({ required: false })
     endHalf: string;
-  
+   
+     @Prop({ default: [] })
+     feedback: Feedback[];
     @Prop({ required: false })
-    reason: [string];
+    reason: string;
     @Prop({ required: false })
     duration:string
     

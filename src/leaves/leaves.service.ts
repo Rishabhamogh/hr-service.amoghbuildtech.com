@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { DatabaseErrorService } from "src/shared/error-handling/database-error.service";
@@ -26,9 +26,9 @@ export class LeavesService {
         const response = await this.leaveDbService.saveLeave(payload)
             return response
     }
-    async addInArray(id: string, field: string, value: any) {
+ async addInArray(id: string, field: string, value: any,userId: string) {
     try {
-      let payload: any = { $push: { [field]: value } };
+      let payload: any = { $push: { [field]: {value,userId ,createdAt:new Date() } }}
       let response = await this.leaveDbService.update({_id:id}, payload);
       return response;
     } catch (error) {
@@ -67,7 +67,7 @@ export class LeavesService {
         query)
        return response
     }
-    async updatePermission(filter:any,payload:any){
+    async update(filter:any,payload:any){
             const response= await this.leaveDbService.update(filter, { $set: payload })
             return response
        

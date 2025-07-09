@@ -97,7 +97,7 @@ export class LeavesController {
     }
     @Patch('/:id')
     async updateNotification(@Body() params:any, @Param('id') id: string){
-     let response=await this.leaveService.updatePermission({_id:id},params)
+     let response=await this.leaveService.update({_id:id},params)
       return response
     }
     @Delete('/:id')
@@ -178,7 +178,7 @@ export class LeavesController {
     }
     @Patch('add/:id')
     async addInArray(@Body() params:any, @Param('id') id: string){
-     let response=await this.leaveService.addInArray(id,params?.field,params.value)
+     let response=await this.leaveService.addInArray(id,params?.field,params.value,params?.userId)
       return response
     }
 }

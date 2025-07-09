@@ -1,8 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
+import { SiteVisitStatus } from 'src/common/constants/constants';
 
 export type LeaveApplicationDocument = HydratedDocument<LeaveApplication>;
 
+export class Feedback {
+  @Prop({ required: true })
+  value: string;
+
+   @Prop()
+  userId: string;
+
+  @Prop({ default: Date.now() })
+  createdAt: Date;
+}
 @Schema({ collection: 'leavesApplication', timestamps: true })
 export class LeaveApplication {
   
@@ -27,8 +38,13 @@ export class LeaveApplication {
   @Prop({ required: false })
   endHalf: string;
 
-  @Prop({ required: false })
-  reason: [string];
+ @Prop({ required: false })
+reason:string;
+
+  @Prop({ default: [] })
+  feedback: Feedback[];
+
+
   @Prop({ required: false })
   duration:string
   
