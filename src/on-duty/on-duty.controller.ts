@@ -61,7 +61,24 @@ export class OnDutyController {
     }
 
     switch (role) {
+ case Roles.ADMIN:
+        console.log("ADMIN")
+ if (params?.userId) {
+            let role = await this.cacheService.getRoleById(params?.userId);
+            if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
+           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
 
+             const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
+            }
+            else{
+              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+            }
+
+          }
+        break;
       case Roles.MANAGER:
       case Roles.TEAM_LEAD:
         {
@@ -75,11 +92,40 @@ export class OnDutyController {
             userIds.push(userId);
             query['userId'] = { $in: objectIds }
           }
+           if (params?.userId) {
+            let role = await this.cacheService.getRoleById(params?.userId);
+            if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
+           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+
+             const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
+            }
+            else{
+              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+            }
+
+          }
         }
         break;
       case Roles.AGENT: {
         if (department == Department.HR) {
+  if (params?.userId) {
+            let role = await this.cacheService.getRoleById(params?.userId);
+            if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
+           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
 
+             const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
+            }
+            else{
+              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+            }
+
+          }
         }
         query['userId'] = new Types.ObjectId(userId)
 

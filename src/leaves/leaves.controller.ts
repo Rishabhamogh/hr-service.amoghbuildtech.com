@@ -47,34 +47,73 @@ export class LeavesController {
     switch (role) {
       case Roles.ADMIN:
         console.log("ADMIN")
+ if (params?.userId) {
+            let role = await this.cacheService.getRoleById(params?.userId);
+            if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
+           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+
+             const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
+            }
+            else{
+              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+            }
+
+          }
         break;
       case Roles.MANAGER:
       case Roles.TEAM_LEAD:
 
         if (department?.includes(Department.HR)) {
-
+          
         }
         else {
-          let team = await this.cacheService.getTeamByManager(userId)
-          console.log("tes", team)
-          let employeeCodes = []
-          let serialNumbers = []
-          await Promise.all(team.map(async (user: any) => {
-            let userData = await this.cacheService.getUserData(user)
-            console.log("user", userData)
-            employeeCodes.push(userData.employeeCode)
-            serialNumbers.push(userData.machineNumber)
-          }))
-          console.log("uuu", employeeCodes, serialNumbers)
-
+       
+          
+          let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+          const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
         }
+        if (params?.userId) {
+            let role = await this.cacheService.getRoleById(params?.userId);
+            if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
+           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+
+             const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
+            }
+            else{
+              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+            }
+
+          }
         break;
 
       case Roles.MARKETING_MANAGER:
 
       case Roles.AGENT:
         if (department?.includes(Department.HR)) {
-          console.log("AGET finance case 1")
+            if (params?.userId) {
+            let role = await this.cacheService.getRoleById(params?.userId);
+            if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
+           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+
+             const objectIds = userIds.map(id => new Types.ObjectId(id));
+          objectIds.push(new Types.ObjectId(userId));
+          userIds.push(userId);
+          query['userId'] = { $in: objectIds }
+            }
+            else{
+              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+            }
+
+          }
         }
         else {
 
@@ -100,9 +139,9 @@ export class LeavesController {
         { toDate: { $gte: new Date(startTime), $lt: new Date(endTime) } }
       ];
     }
-    if (params?.userId) {
-      query['userId'] = Types.ObjectId.createFromHexString(params.userId);
-    }
+    // if (params?.userId) {
+    //   query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+    // }
 
     let response = await this.leaveService.findLeaveApplication(skip,
       limit,
@@ -182,9 +221,9 @@ export class LeavesController {
       }
 
     }
-    if (params?.userId) {
-      query['userId'] = new Types.ObjectId(params.userId.toString());
-    }
+    // if (params?.userId) {
+    //   query['userId'] = new Types.ObjectId(params.userId.toString());
+    // }
     let response = await this.leaveService.findLeave(skip,
       limit,
       sortKey,
