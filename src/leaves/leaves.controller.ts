@@ -50,15 +50,15 @@ export class LeavesController {
  if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
-           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+           let userIds: string[] = await this.cacheService.getTeamByManager(params?.userId);
 
              const objectIds = userIds.map(id => new Types.ObjectId(id));
-          objectIds.push(new Types.ObjectId(userId));
-          userIds.push(userId);
+          // objectIds.push(new Types.ObjectId(userId));
+        // userIds.push(userId);
           query['userId'] = { $in: objectIds }
             }
             else{
-              query['userId'] = Types.ObjectId.createFromHexString(params.userId);
+              query['userId'] = Types.ObjectId.createFromHexString(params?.userId);
             }
 
           }
@@ -80,8 +80,9 @@ export class LeavesController {
         }
         if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
+            console.log("role", role)
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
-           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+           let userIds: string[] = await this.cacheService.getTeamByManager(params?.userId);
 
              const objectIds = userIds.map(id => new Types.ObjectId(id));
           objectIds.push(new Types.ObjectId(userId));
@@ -102,7 +103,7 @@ export class LeavesController {
             if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
-           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+           let userIds: string[] = await this.cacheService.getTeamByManager(params?.userId);
 
              const objectIds = userIds.map(id => new Types.ObjectId(id));
           objectIds.push(new Types.ObjectId(userId));
@@ -139,9 +140,9 @@ export class LeavesController {
         { toDate: { $gte: new Date(startTime), $lt: new Date(endTime) } }
       ];
     }
-    // if (params?.userId) {
-    //   query['userId'] = Types.ObjectId.createFromHexString(params.userId);
-    // }
+    if(params?.status){
+      query['status'] = params?.status
+    }
 
     let response = await this.leaveService.findLeaveApplication(skip,
       limit,

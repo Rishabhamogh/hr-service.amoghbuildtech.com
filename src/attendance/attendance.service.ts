@@ -112,7 +112,7 @@ try {
           // const [employeeCode, machineNumber] = key.split('-');
           
           // Try to get user from cache first
-          let user = await this.cacheService.getEmployeeUserId(key);
+        let user = await this.cacheService.getCache(key)
           // console.log("Cached user:", user);
           
           // If not in cache, fetch from database

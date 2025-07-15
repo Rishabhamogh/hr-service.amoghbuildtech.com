@@ -66,11 +66,11 @@ export class OnDutyController {
  if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
-           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+           let userIds: string[] = await this.cacheService.getTeamByManager(params?.userId);
 
              const objectIds = userIds.map(id => new Types.ObjectId(id));
-          objectIds.push(new Types.ObjectId(userId));
-          userIds.push(userId);
+          // objectIds.push(new Types.ObjectId(userId));
+          // userIds.push(userId);
           query['userId'] = { $in: objectIds }
             }
             else{
@@ -95,7 +95,7 @@ export class OnDutyController {
            if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
-           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+           let userIds: string[] = await this.cacheService.getTeamByManager(params?.userId);
 
              const objectIds = userIds.map(id => new Types.ObjectId(id));
           objectIds.push(new Types.ObjectId(userId));
@@ -114,7 +114,7 @@ export class OnDutyController {
   if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
-           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
+           let userIds: string[] = await this.cacheService.getTeamByManager(params?.userId);
 
              const objectIds = userIds.map(id => new Types.ObjectId(id));
           objectIds.push(new Types.ObjectId(userId));
@@ -135,6 +135,9 @@ export class OnDutyController {
 
       }
 
+    }
+    if(params?.status){
+      query['status'] = params?.status
     }
     let response = await this.onDutyService.findLeaveApplication(skip,
       limit,
