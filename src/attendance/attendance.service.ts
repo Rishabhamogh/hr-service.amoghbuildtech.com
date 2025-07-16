@@ -24,12 +24,12 @@ async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:strin
 let LoginUserId:any= this.requestContextService.get("userId")
 let role= this.requestContextService.get("role")
 
-let department:any= this.requestContextService.get("department")
+let department:any= Department.SalES//this.requestContextService.get("department")
 let query={}
 
  page =  page || 1;  
  limit = limit || 10; 
- console.log("prev api",department)
+ console.log("prev api",role)
     let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
     
    
