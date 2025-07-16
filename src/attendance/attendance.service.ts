@@ -31,7 +31,7 @@ let query={}
  limit = limit || 10; 
  console.log("prev api",role)
     let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
-    console.log("rrrr",response)
+    // console.log("rrrr",response)
    
   
   console.log("role",role,LoginUserId,employeeCode)

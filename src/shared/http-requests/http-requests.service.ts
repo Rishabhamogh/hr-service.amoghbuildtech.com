@@ -57,7 +57,7 @@ export class HttpRequestsService {
   try {
     this.logger.log('GET Request URL:', url);
     const response = await axios.get(url, { headers });
-    this.logger.debug('Response Data:', response.data);
+    // this.logger.debug('Response Data:', response.data);
     return response.data;
   } catch (error) {
     this.logger.error('GET request failed:', error.message || error);
