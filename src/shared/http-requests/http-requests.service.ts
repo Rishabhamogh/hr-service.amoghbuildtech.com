@@ -53,27 +53,18 @@ export class HttpRequestsService {
     return promise;
   }
 
-  async get(url: string,headers?:any) {
-    let promise = new Promise((resolve, reject) => {
-      try {
-        this.logger.log('Get request url: ' + url );
-        axios
-          .get(url,{headers})
-          .then((response: any) => {
-           this.logger.debug('Response: ', response.data);
-            resolve(response.data);
-          })
-          .catch((error) => {
-            this.logger.error(error);
-            reject(error.message);
-          });
-      } catch (error) {
-        this.logger.error('Error in sending get request', error);
-        reject(error.message);
-      }
-    });
-    return promise;
+ async get(url: string, headers?: any) {
+  try {
+    this.logger.log('GET Request URL:', url);
+    const response = await axios.get(url, { headers });
+    this.logger.debug('Response Data:', response.data);
+    return response.data;
+  } catch (error) {
+    this.logger.error('GET request failed:', error.message || error);
+    throw error;
   }
+}
+
   async delete(url: string,headers?:any) {
     let promise = new Promise((resolve, reject) => {
       try {
