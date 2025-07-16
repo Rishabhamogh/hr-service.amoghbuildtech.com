@@ -33,7 +33,7 @@ let query={}
     
    
   
-  
+  console.log("role",role,LoginUserId,employeeCode)
 if(employeeCode && machineNumber){
  let res=this.filterData(employeeCode,machineNumber,response,fromDate,toDate)
  return res
