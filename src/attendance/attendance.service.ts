@@ -21,8 +21,8 @@ export class AttendanceService {
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
 
-let LoginUserId:any= this.requestContextService.get("userId")
-let role= this.requestContextService.get("role")
+let LoginUserId:any="67c2cac61c1562fbc61a03cf" //this.requestContextService.get("userId")
+let role= "MANAGER"//this.requestContextService.get("role")
 
 let department:any= Department.SalES//this.requestContextService.get("department")
 let query={}
