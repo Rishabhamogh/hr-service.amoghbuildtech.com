@@ -46,9 +46,9 @@ if(employeeCode && machineNumber){
         break;
         case Roles.MANAGER:
         case Roles.TEAM_LEAD:
-
+          console.log("MANAGER")
           if( department?.includes(Department.HR)){
-           
+           console.log("HR finance Manger 1")
           }
           else{
             console.log("login",LoginUserId)

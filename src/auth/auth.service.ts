@@ -16,7 +16,6 @@ export class AuthService {
 
   async login(loginDto: any, res: any) {
     const user: User = await this.usersService.login(loginDto);
-    console.log("uu",User)
     const password = createHashValue(loginDto.password);
     if (user?.password !== password) {
       throw new UnauthorizedException();
