@@ -13,7 +13,7 @@ export class AttendanceController {
 
     @Post()
     async getAttendence(@Body() params:any){
-        
+        console.log("pp",params)
         let response=await this.attendenceService.getAttendence(params.fromDate,params.toDate,params?.userId, params?.employeeCode,params?.machineNumber,params?.page,params?.limit)
         return response
     }
