@@ -48,10 +48,10 @@ if(employeeCode && machineNumber){
         case Roles.MANAGER:
         case Roles.TEAM_LEAD:
           console.log("MANAGER")
-          if( department?.includes(Department.HR)){
-           console.log("HR finance Manger 1")
-          }
-          else{
+          // if( department?.includes(Department.HR)){
+          //  console.log("HR finance Manger 1")
+          // }
+          // else{
             console.log("login",LoginUserId)
             let team=await this.cacheService.getTeamByManager(LoginUserId)
             console.log("tes",team)
@@ -66,7 +66,7 @@ if(employeeCode && machineNumber){
             console.log("uuu",employeeCodes,serialNumbers) 
           let res= await this.filterData(employeeCodes,serialNumbers,response ,fromDate,toDate)
           return res
-          }
+          // }
           break;
         
         case Roles.MARKETING_MANAGER:
