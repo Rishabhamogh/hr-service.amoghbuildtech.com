@@ -103,7 +103,7 @@ try {
   
   // Step 2: Fetch user details from Redis/DB
   const userDetailsMap: Record<string, any> = {};
-  console.log("Processing keys count:", paginatedKeys.length);
+  console.log("Processing keys count:", paginatedKeys);
   
   try {
     await Promise.all(
@@ -113,7 +113,8 @@ try {
           // const [employeeCode, machineNumber] = key.split('-');
           
           // Try to get user from cache first
-        let user = await this.cacheService.getEmployeeUserId(employeeCode)
+          console.log("Fetching user from cache for key:", key);
+        let user = await this.cacheService.getEmployeeUserId(key)
           console.log("Cached user:", user);
           
           // If not in cache, fetch from database
