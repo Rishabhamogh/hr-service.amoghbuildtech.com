@@ -29,7 +29,7 @@ let query={}
 
  page =  page || 1;  
  limit = limit || 10; 
-    let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
+    let response:any=[]//await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
     
    
   
@@ -112,11 +112,11 @@ try {
           // const [employeeCode, machineNumber] = key.split('-');
           
           // Try to get user from cache first
-        let user = await this.cacheService.getCache(key)
+        let user = await this.cacheService.getEmployeeUserId(employeeCode)
           // console.log("Cached user:", user);
           
           // If not in cache, fetch from database
-          if (!user) {
+          if (!user && employeeCode) {
             user = await this.userService.findOne({ employeeCode });
             console.log("DB user:", user);
           }
@@ -263,7 +263,7 @@ console.log("emd",employeeCodes,serialNumbers)
 
 
       console.log("Cache Key:", userDetails);
-      let user = await this.cacheService.getCache(cacheKey); // Try Redis cache first
+        let user = await this.cacheService.getEmployeeUserId(cacheKey)
 
       if (!user) {
          let user = await this.userService.findOne({ employeeCode: empCode }); // Fetch from DB
