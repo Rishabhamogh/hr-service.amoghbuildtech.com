@@ -29,15 +29,16 @@ let query={}
 
  page =  page || 1;  
  limit = limit || 10; 
+ console.log("prev api",department)
     let response:any=await this.httpService.get(`http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`)
     
    
   
   console.log("role",role,LoginUserId,employeeCode)
-// if(employeeCode && machineNumber){
-//  let res=this.filterData(employeeCode,machineNumber,response,fromDate,toDate)
-//  return res
-// }
+if(employeeCode && machineNumber){
+ let res=this.filterData(employeeCode,machineNumber,response,fromDate,toDate)
+ return res
+}
 
     
   switch(role){
