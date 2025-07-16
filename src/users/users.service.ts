@@ -270,7 +270,12 @@ export class UsersService {
 
   async changePaswwordByOTP( params: any) {
     try {
-      let user: any = await this.dbService.getOne({ personalEmail: params.email });
+      let query: any = {};
+       query['$or']=[
+        {personalEmail: params.email},
+        {emailId: params.email},
+      ]
+      let user: any = await this.dbService.getOne(query);
       if(!user) new BadRequestException("Not user ")
       const password: string = createHashValue(params.password);
       const payload: any = {
