@@ -199,7 +199,7 @@ export class UsersService {
       );
       let response = await this.dbService.updateOne(id, updateUserDto);
     this.logger.log("response after update user: ",response)
-      this.cacheService.setUser(response)
+    await  this.cacheService.setUser(response)
       return response;
     } catch (error) {
       this.logger.error('Error in updating user:', error);
