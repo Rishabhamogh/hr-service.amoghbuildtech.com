@@ -114,7 +114,7 @@ try {
           
           // Try to get user from cache first
         let user = await this.cacheService.getEmployeeUserId(employeeCode)
-          // console.log("Cached user:", user);
+          console.log("Cached user:", user);
           
           // If not in cache, fetch from database
           if (!user && employeeCode) {
@@ -158,7 +158,7 @@ try {
           };
           
         } catch (err) {
-          // console.error(`Error processing key ${key}:`, err);
+          console.error(`Error processing key ${key}:`, err);
           // Continue processing other keys even if one fails
         }
       })

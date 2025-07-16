@@ -311,6 +311,7 @@ async getCache(key: string): Promise<any> {
         return;
       }
       let teams: any = JSON.parse(str);
+      console.log("teams",teams)
       if (isEmpty(teams)) {
         return [];
       }
