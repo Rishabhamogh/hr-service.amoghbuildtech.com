@@ -279,7 +279,7 @@ console.log("emd",employeeCodes,serialNumbers)
             //  return user
       if(user){
       let leavesFilter={}
-      leavesFilter['userId']=Types.ObjectId.createFromHexString(user?._id)
+      leavesFilter['userId']= user?._id ?Types.ObjectId.createFromHexString(user?._id):''
       // leavesFilter['status']=LeaveStatus.APPROVED
       leavesFilter['fromDate'] = { $gte: new Date(fromDate) };
       leavesFilter['toDate'] = { $lte: new Date(toDate) };
@@ -294,6 +294,7 @@ console.log("emd",employeeCodes,serialNumbers)
           logs: groupedLogs,
           leaves,
           OnDuty,
+          employeeCode: empCode,
           userDetails: {
               EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
               Name: user?.Name || userDetails.Name,
