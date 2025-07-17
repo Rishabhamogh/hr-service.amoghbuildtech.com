@@ -8,6 +8,7 @@ import { UsersService } from 'src/users/users.service';
 import { Types } from 'mongoose';
 import { OnDutyService } from 'src/on-duty/on-duty.service';
 import { console } from 'inspector';
+import e from 'express';
 
 @Injectable()
 export class AttendanceService {
@@ -63,6 +64,9 @@ if(employeeCode && machineNumber){
               employeeCodes.push(userData.employeeCode)
               serialNumbers.push(userData.machineNumber)
             }))
+           let manager=await this.cacheService.getUserData(LoginUserId)
+            employeeCodes.push(manager.employeeCode)
+            serialNumbers.push(manager.machineNumber)
             console.log("uuu",employeeCodes,serialNumbers) 
           let res= await this.filterData(employeeCodes,serialNumbers,response ,fromDate,toDate)
           return res
