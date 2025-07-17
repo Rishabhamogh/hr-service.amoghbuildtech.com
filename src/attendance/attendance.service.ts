@@ -299,7 +299,7 @@ console.log("emd",employeeCodes,serialNumbers)
               EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
               Name: user?.Name || userDetails.Name,
               Department: user?.Department || userDetails.Department,
-              UserId: user?.UserId || null, // Ensure UserID is included
+              UserId: user?._id || null, // Ensure UserID is included
                weekEnds: user?.weekEnds
 
           }
