@@ -306,7 +306,7 @@ console.log("emd",employeeCodes,serialNumbers)
     }
   }   
 
-  return {data:[filteredData]};
+  return {data:filteredData};
 }
 
 }
