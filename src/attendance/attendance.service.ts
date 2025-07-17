@@ -290,7 +290,7 @@ console.log("emd",employeeCodes,serialNumbers)
 
       // Store  logs and user details inside the employeeCode object
       console.log("empdo",empCode)
-      filteredData = {
+      filteredData[empCode] = {
           logs: groupedLogs,
           leaves,
           OnDuty,
