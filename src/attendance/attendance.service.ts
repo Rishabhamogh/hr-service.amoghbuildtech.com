@@ -299,7 +299,7 @@ let resultArr=[]
               EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
               Name: user?.Name || userDetails.Name,
               Department: user?.Department || userDetails.Department,
-              UserId: user?._id || null, 
+              userId: user?._id || null, 
                weekEnds: user?.weekEnds
 
           }
