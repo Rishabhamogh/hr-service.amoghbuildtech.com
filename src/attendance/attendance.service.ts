@@ -290,7 +290,7 @@ console.log("emd",employeeCodes,serialNumbers)
 
       // Store  logs and user details inside the employeeCode object
       console.log("empdo",empCode)
-      filteredData[empCode] = {
+      filteredData = {
           logs: groupedLogs,
           leaves,
           OnDuty,
@@ -299,7 +299,7 @@ console.log("emd",employeeCodes,serialNumbers)
               EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
               Name: user?.Name || userDetails.Name,
               Department: user?.Department || userDetails.Department,
-              UserId: user?._id || null, // Ensure UserID is included
+              UserId: user?._id || null, 
                weekEnds: user?.weekEnds
 
           }
@@ -307,7 +307,7 @@ console.log("emd",employeeCodes,serialNumbers)
     }
   }   
 
-  return {data:filteredData};
+  return {data:[filteredData]};
 }
 
 }
