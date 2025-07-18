@@ -59,6 +59,8 @@ export class UsersController {
     this.logger.log('Request received to find all users');
     const role: string = this.contextService.get('role');
     const userId: string = this.contextService.get('userId');
+      const department: string = this.contextService.get('department');
+
     let query = {};
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
@@ -66,7 +68,12 @@ export class UsersController {
     const sortKey: string = params?.sortKey || 'createdAt';
     const sortDir: string = params?.sortDir || 'DESC';
     switch (role) {
+
       case Roles.MANAGER:
+        if(department.includes(Department.HR)  ){
+
+        }
+        else
         {
           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
           userIds.push(userId);

@@ -63,3 +63,5 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 UserSchema.index({mobile: 1}, {unique: true});
+UserSchema.index({employeeCode: 1}, {unique: true});
+
