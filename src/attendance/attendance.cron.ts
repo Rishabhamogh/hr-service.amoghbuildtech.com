@@ -13,7 +13,7 @@ export class AttendanceCron {
   ) {}
 
   // Runs every day at midnight
-  @Cron(CronExpression.EVERY_DAY_AT_1PM)
+  @Cron(CronExpression.EVERY_DAY_AT_11PM)
   async handleAttendanceCron() {
     console.log('Attendance Cron Job started');
     const now = new Date();
@@ -23,7 +23,7 @@ export class AttendanceCron {
     const todayStr = `${yyyy}-${mm}-${dd}`;
     const fromDate = todayStr;
     const toDate = todayStr;
-    const apiUrl = `http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${'2025-04-01'}&ToDate=${'2025-07-18'}&DeviceID=100215012504`;
+    const apiUrl = `http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`;
     const response = await this.httpService.get(apiUrl);
     if (Array.isArray(response)) {
       for (const record of response) {
