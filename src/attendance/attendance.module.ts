@@ -8,14 +8,23 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { LeavesModule } from 'src/leaves/leaves.module';
 import { OnDutyModule } from 'src/on-duty/on-duty.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Attendance, AttendanceSchema } from './schemas/attendance.schema';
+import { AttendanceCron } from './attendance.cron';
 
 @Module({
-  imports:[HttpRequestsModule, RequestContextModule, CacheModule,UsersModule, 
+  imports:[
+    HttpRequestsModule, 
+    RequestContextModule, 
+    CacheModule,
+    UsersModule, 
     JwtModule,
     LeavesModule,
-    OnDutyModule
+    OnDutyModule,
+    MongooseModule.forFeature([{ name: Attendance.name, schema: AttendanceSchema }])
   ],
-  providers: [AttendanceService],
-  controllers: [AttendanceController]
+  providers: [AttendanceService, AttendanceCron],
+  controllers: [AttendanceController],
+  exports:[AttendanceService]
 })
 export class AttendanceModule {}

@@ -304,6 +304,7 @@ async getCache(key: string): Promise<any> {
 
   async getEmployeeUserId(employeCode: string) {
     try {
+      console.log("employeCode",employeCode)
       let str: string = await this.cacheManager.get('employee');
       // console.log("cache str",str)
       if (!str) {
@@ -311,11 +312,13 @@ async getCache(key: string): Promise<any> {
         return;
       }
       let teams: any = JSON.parse(str);
-      console.log("teams",teams)
+      // console.log("teams",teams)
       if (isEmpty(teams)) {
         return [];
       }
+
       if (teams?.hasOwnProperty(employeCode)) {
+        console.log("employeCode",employeCode)
         return teams[employeCode];
       } else {
         return [];

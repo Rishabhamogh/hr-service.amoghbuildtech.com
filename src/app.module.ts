@@ -4,12 +4,14 @@ import { AppService } from './app.service';
 import { AttendanceModule } from './attendance/attendance.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import configuration from './config/configuration';
+import configuration from './common/config/configuration';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { OnDutyModule } from './on-duty/on-duty.module';
 import { LeavesModule } from './leaves/leaves.module';
 import { StartupModule } from './startup/startup.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -28,11 +30,13 @@ import { StartupModule } from './startup/startup.module';
     CacheModule.register({
       isGlobal: true
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     AttendanceModule,
     OnDutyModule,
     LeavesModule,
-    StartupModule
+    StartupModule,
+    SchedulerModule
     
   ],
   controllers: [AppController],

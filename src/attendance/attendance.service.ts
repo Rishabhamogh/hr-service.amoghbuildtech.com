@@ -14,7 +14,7 @@ import e from 'express';
 export class AttendanceService {
     constructor(
         private httpService:HttpRequestsService,
-        private requestContextService:RequestContextService,
+        // private requestContextService:RequestContextService,
         private cacheService:CacheService,
         private userService:UsersService,
         private leaves:LeavesService,
@@ -22,10 +22,10 @@ export class AttendanceService {
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
 
-let LoginUserId:any=this.requestContextService.get("userId")
-let role= this.requestContextService.get("role")
+let LoginUserId:any="gfhf"//this.requestContextService.get("userId")
+let role= "AMMS"//this.requestContextService.get("role")
 
-let department:any= this.requestContextService.get("department")
+let department:any= "HR"//this.requestContextService.get("department")
 let query={}
 
  page =  page || 1;  
