@@ -200,7 +200,11 @@ export class LeavesController {
 
     console.log("role", role)
     console.log("useId", userId)
+
     query['userId'] = new Types.ObjectId(userId);
+    if (params?.userId) {
+      query['userId'] = new Types.ObjectId(params.userId);
+    }
     switch (role) {
       case Roles.MANAGER:
       case Roles.TEAM_LEAD:
