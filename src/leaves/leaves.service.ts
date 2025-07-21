@@ -78,6 +78,12 @@ export class LeavesService {
         return response
 
     }
+    async updateLeave(filter:any,query:any){
+      
+            const response= await this.leaveDbService.updateLeave(filter,query)
+            return response
+       
+    }
     async findOne(query:any){
         let response=await this.leaveDbService.findOne(query)
         return response

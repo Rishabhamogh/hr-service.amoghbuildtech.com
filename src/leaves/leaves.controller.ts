@@ -173,6 +173,14 @@ export class LeavesController {
     return response
 
   }
+  @Patch('leaves/:id')
+ async updateLeave(@Body() params: any, @Param('id') id: string) {
+  let filter = { _id: id }
+  let query = params
+            const response= await this.leaveService.updateLeave(filter,query)
+            return response
+       
+    }
   @Get()
   async getLeave(@Query() params: any) {
     const pageNumber: number = Number(params?.pageNumber) || 0;
