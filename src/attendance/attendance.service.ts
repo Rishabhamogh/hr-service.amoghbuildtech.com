@@ -9,27 +9,23 @@ import { Types } from 'mongoose';
 import { OnDutyService } from 'src/on-duty/on-duty.service';
 import { console } from 'inspector';
 import e from 'express';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Attendance } from './schemas/attendance.schema';
 
 @Injectable()
 export class AttendanceService {
     constructor(
         private httpService:HttpRequestsService,
-        // private requestContextService:RequestContextService,
+        private requestContextService:RequestContextService,
         private cacheService:CacheService,
         private userService:UsersService,
         private leaves:LeavesService,
-        private ODService:OnDutyService,
-        @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>
+        private ODService:OnDutyService
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
 
-let LoginUserId:any="gfhf"//this.requestContextService.get("userId")
-let role= "AMMS"//this.requestContextService.get("role")
+let LoginUserId:any=this.requestContextService.get("userId")
+let role= this.requestContextService.get("role")
 
-let department:any= "HR"//this.requestContextService.get("department")
+let department:any= this.requestContextService.get("department")
 let query={}
 
  page =  page || 1;  
@@ -319,26 +315,5 @@ resultArr.push(filteredData[empCode])
   return {data:resultArr};
 }
 
-async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }) {
-    const query: any = {};
-    if (employeeCode) query.EmployeeCode = employeeCode;
-    if (fromDate || toDate) {
-        query.LogDate = {};
-        if (fromDate) query.LogDate.$gte = new Date(fromDate);
-        if (toDate) query.LogDate.$lte = new Date(toDate);
-    }
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-        this.attendanceModel.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
-        this.attendanceModel.countDocuments(query)
-    ]);
-    return {
-        data,
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-    };
 }
-
-}
+      
