@@ -83,7 +83,7 @@ async getCache(key: string): Promise<any> {
 
     console.log("eee",employeCode)
     await this.cacheManager.set('users', JSON.stringify(users), 0);
-    await this.cacheManager.set('employee', JSON.stringify(employeCode), 0);
+    // await this.cacheManager.set('employee', JSON.stringify(employeCode), 0);
 
   }
 
