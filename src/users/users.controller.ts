@@ -70,6 +70,7 @@ export class UsersController {
     switch (role) {
 
       case Roles.MANAGER:
+        case Roles.TEAM_LEAD:
         if(department.includes(Department.HR)  ){
 
         }
@@ -83,9 +84,14 @@ export class UsersController {
         }
         break;
       case Roles.AGENT: {
+        if(department.includes(Department.HR)  ){
+
+        }
+        else{
         query = {
           _id: userId,
         };
+      }
       }
     }
 
