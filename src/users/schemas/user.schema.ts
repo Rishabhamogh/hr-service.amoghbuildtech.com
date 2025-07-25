@@ -28,7 +28,7 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false , unique: true})
   employeeCode: string;
 
   @Prop({ required: false })
