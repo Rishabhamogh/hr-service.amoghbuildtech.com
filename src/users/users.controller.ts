@@ -284,6 +284,8 @@ export class UsersController {
     this.logger.log('Request received to search in all users');
     const role: string = this.contextService.get('role');
     const userId: string = this.contextService.get('userId');
+        const department: string = this.contextService.get('department');
+
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
     const skip: number = pageNumber * limit;
@@ -293,21 +295,33 @@ export class UsersController {
     this.logger.log('params', params);
 
     switch (role) {
+
       case Roles.ADMIN:
         if (params?.userId) {
           query['userId'] = params.userId;
         }
+
         break;
       case Roles.MANAGER:
+        case Roles.TEAM_LEAD:
+          if(department.includes(Department.HR)  ){
+          }
+          else{
         let userIds: string[] = await this.cacheService.getTeamByManager(userId);
         userIds.push(userId);
         query = {
           userId: { $in: userIds },
         };
+      }
+        
         break;
       case Roles.AGENT:
       default:
+         if(department.includes(Department.HR)  ){
+          }
+          else{
         query['userId'] = userId;
+          }
     }
     if (params?.userId) {
       query['_id'] = params.userId;
