@@ -12,6 +12,7 @@ import { LeavesModule } from './leaves/leaves.module';
 import { StartupModule } from './startup/startup.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HRModule } from './hr-status/hr-status.module';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     OnDutyModule,
     LeavesModule,
     StartupModule,
-    SchedulerModule
+    SchedulerModule,
+    HRModule
     
   ],
   controllers: [AppController],

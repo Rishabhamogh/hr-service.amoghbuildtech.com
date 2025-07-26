@@ -6,8 +6,8 @@ export class Attendance extends Document {
   @Prop({ required: true ,unique: true})
   employeeCode: string;
 
-  @Prop({ required: true })
-  logDate: string;
+  @Prop()
+  logDate: Date;
 
   @Prop({ required: true })
   serialNumber: string;

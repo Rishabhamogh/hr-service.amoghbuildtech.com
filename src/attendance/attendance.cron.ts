@@ -17,8 +17,7 @@ export class AttendanceCron {
     private userService: UsersService
   ) {}
 
-  // Runs every day at midnight
-  // @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_11PM)
   async handleAttendanceCron() {
     console.log('Attendance Cron Job started');
     const now = new Date();

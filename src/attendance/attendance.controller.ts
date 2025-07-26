@@ -41,6 +41,7 @@ let LoginUserId:any=this.requestContextService.get("userId")
 let role= this.requestContextService.get("role")
 
 let department:any= this.requestContextService.get("department")
+let query:any={}
         switch(role){
                 case Roles.ADMIN:
                console.log("ADMIN")
@@ -67,6 +68,7 @@ let department:any= this.requestContextService.get("department")
                     employeeCodes.push(manager.employeeCode)
                     serialNumbers.push(manager.machineNumber)
                 
+                    query['userId']= {$in:employeeCodes}
                   }
                   break;
                 
@@ -89,8 +91,8 @@ let department:any= this.requestContextService.get("department")
                   query['generatedBy']=LoginUserId
                 break
               }
-       // return await this.attendenceService.getAttendanceList({ page, limit, employeeCode, fromDate, toDate });
-               return await this.attendenceService.getEmployeeAttendanceDetails(employeeCode, fromDate, toDate );
+       return await this.attendenceService.getAttendanceList({ page, limit, employeeCode, fromDate, toDate });
+               return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
 
     }
 }

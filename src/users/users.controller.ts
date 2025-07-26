@@ -26,30 +26,47 @@ import { TeamDto } from './dto/team.dto';
 import { CacheService } from 'src/shared/cache/cache.service';
 // import { StartupService } from 'src/startup/startup.service';
 // import { ReloadService } from 'src/startup/reload.service';
-
+import { AccessControlService } from 'src/shared/access-control/access-control.service';
+import { ReloadService } from 'src/startup/reload.service';
 
 @Controller()
-
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(
     private readonly usersService: UsersService,
     private contextService: RequestContextService,
     private cacheService: CacheService,
+    private reloadService: ReloadService,
+    private accessControlService: AccessControlService,
   ) { }
   @UseGuards(AuthGuard)
   @Post('/v1/user')
-
+ 
   async create(@Body() createUserDto: CreateUserDto) {
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'POST');
     this.logger.log('Request received to add user', createUserDto);
     if (createUserDto?.team) {
       await Promise.all(createUserDto?.team.map(async (userId) => {
         await this.checkUserIfAlreadyPresent(userId)
       }))
     }
-    const response = await this.usersService.create(createUserDto);
-   
+    const response:any = await this.usersService.create(createUserDto);
+    if (response) await this.reloadService.loadUsers()
+    if (createUserDto?.team?.length) await this.reloadService.loadTeamByManagerId(response._id.toString())
+    if (createUserDto.teamLeadId && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
+      await this.usersService.addToTeam(createUserDto.teamLeadId, [response._id.toString()])
+      await this.usersService.update(response._id,{managerId:createUserDto.managerId,teamLeadId:createUserDto.teamLeadId})
+      await this.reloadService.loadTeamByManagerId(createUserDto.teamLeadId)
+      await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
+
+    }
+    else if ((createUserDto.managerId || !createUserDto.teamLeadId) && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
+      await this.usersService.addToTeam(createUserDto.managerId, [response._id.toString()])
+      await this.usersService.update(response._id,{managerId:createUserDto.managerId})
+
+      await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
+    }
     return response;
   }
   @UseGuards(AuthGuard)
@@ -59,22 +76,15 @@ export class UsersController {
     this.logger.log('Request received to find all users');
     const role: string = this.contextService.get('role');
     const userId: string = this.contextService.get('userId');
-      const department: string = this.contextService.get('department');
-
     let query = {};
+    this.accessControlService.check(role, 'users', 'GET');
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
     const skip: number = pageNumber * limit;
     const sortKey: string = params?.sortKey || 'createdAt';
     const sortDir: string = params?.sortDir || 'DESC';
     switch (role) {
-
       case Roles.MANAGER:
-        case Roles.TEAM_LEAD:
-        if(department.includes(Department.HR)  ){
-
-        }
-        else
         {
           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
           userIds.push(userId);
@@ -84,14 +94,9 @@ export class UsersController {
         }
         break;
       case Roles.AGENT: {
-        if(department.includes(Department.HR)  ){
-
-        }
-        else{
         query = {
           _id: userId,
         };
-      }
       }
     }
 
@@ -106,11 +111,12 @@ export class UsersController {
   }
   @UseGuards(AuthGuard)
   @Get('/v1/user/team/:id')
-
+ 
   async findTeam(@Param('id') id: string) {
     this.logger.log('Request received to find team of userId: ' + id);
     if (!id) throw new BadRequestException("Id is not valid")
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'GET');
     const response = await this.usersService.getTeamDetails(id);
     return response;
   }
@@ -122,26 +128,30 @@ export class UsersController {
     this.logger.log('Request received to get logged in user details');
     let role = this.contextService.get('role')
     let userId: string = this.contextService.get('userId')
-    let department= this.contextService.get('department')
-    console.log("department",department)
     switch (role) {
-      case Roles.LEAD_MANAGER: {
-        userId = await this.cacheService.getManagerById(userId)
-      }
+      // case Roles.LEAD_MANAGER: {
+      //   // userId = await this.cacheService.getManagerById(userId)
+        
+    
+      // }
       case Roles.MANAGER: {
-        let team = await this.cacheService.getTeamByManager(userId)
+        // let team = await this.cacheService.getTeamByManager(userId)
+        let user= await this.usersService.getOne({_id: userId })
         return {
           userId,
           role,
-          team,
-          department
+          // team,
+          user
         }
       }
+      
     }
+      let user= await this.usersService.getOne({_id: userId })
+
     return {
       userId: this.contextService.get('userId'),
       role: this.contextService.get('role'),
-      department: this.contextService.get('department'),
+      user
 
     }
   }
@@ -150,6 +160,7 @@ export class UsersController {
   async findOne(@Param('id') id: string) {
     this.logger.log('Request received to find userId', id);
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'GET');
     const response = await this.usersService.findOne({ _id: id });
     return response;
   }
@@ -157,6 +168,7 @@ export class UsersController {
   @Patch('/v1/user/password/reset/:id')
   async resetPassword(@Param('id') userId: string) {
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'PATCH');
     this.logger.log('Request received to reset password for userId: ', userId);
     const response = await this.usersService.resetPassword(userId);
     return response;
@@ -185,11 +197,14 @@ export class UsersController {
   async addToTeam(@Param('id') id: string, @Body() dto: TeamDto) {
     this.logger.log('Request received to update team for userId: ' + id);
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'POST');
     await Promise.all(dto.userIds.map(async (userId) => {
       let managerId = await this.cacheService.getManagerById(userId)
-      if (managerId) throw new BadRequestException(`${userId} already in team of manager ${managerId}`)
+      let managerName= await this.cacheService.getNameById(managerId)
+      if (managerId) throw new BadRequestException(`${userId} already in team of manager ${managerName}`)
     }))
     const response = await this.usersService.addToTeam(id, dto.userIds);
+    await this.reloadService.loadTeamByManagerId(id)
     return response;
   }
 
@@ -197,29 +212,97 @@ export class UsersController {
   async checkUserIfAlreadyPresent(id: string) {
     this.logger.log('check user:' + id);
     let managers = await this.usersService.getUserByFields({ '$or': [{ role: Roles.MANAGER }, { role: Roles.TEAM_LEAD }] }, ['team'], '')
-    managers?.map((userId) => {
-      userId?.team.map((item:any) => {
-        if (item === id) {
-          throw new BadRequestException(`User is Already in team of ${userId._id}`)
+ 
+   for (const manager of managers) {
+        if (manager?.team?.includes(id)) {
+            const managerName = await this.cacheService.getNameById(manager._id);
+            throw new BadRequestException(`User is Already in team of ${managerName}`);
         }
-      })
-    })
+    }
   }
   @UseGuards(AuthGuard)
   @Patch('/v1/user/:id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     this.logger.log('Request received to update userId: ' + id);
     let role: string = this.contextService.get('role');
-  
+    this.accessControlService.check(role, 'users', 'PATCH');
+    if (updateUserDto.managerId || updateUserDto.teamLeadId) {
+      await this.cacheService.getRoleById(id)
+      await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
+      await this.reloadService.loadTeamByManagerId(updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId)
+      if (updateUserDto.teamLeadId) { 
+       let mangerId= await this.cacheService.getManagerById(updateUserDto.teamLeadId)
+       updateUserDto.managerId=mangerId
+      }
+    }
+    if (updateUserDto?.team?.length) {
+      let userPreviusData = await this.usersService.findUser({ _id: id })
+      role= userPreviusData.role
+      let newTeam = updateUserDto.team
+      let managerId = await this.cacheService.getManagerById(id)
+      this.logger.log("previous data",userPreviusData?.team)
+      const removedItems = userPreviusData?.team.filter(item => !newTeam.includes(item));
+      const addedItems = newTeam.filter(item => !userPreviusData?.team.includes(item));
+      this.logger.log("aaded",addedItems)
+      if (addedItems.length) {
+        let managerId = null;
+        if (role === Roles.TEAM_LEAD) {
+          managerId = await this.cacheService.getManagerById(id);
+          
+        }
+        await Promise.all(addedItems.map(async (item) => {
+         await this.checkUserIfAlreadyPresent(item)
+          const updateData = role === Roles.TEAM_LEAD ? { managerId, teamLeadId: id } : { teamLeadId: id };
+          await this.usersService.update(item, updateData);
+          if (await this.cacheService.getRoleById(item)=== Roles.TEAM_LEAD){
+          let team=await  this.cacheService.getTeamByManager(item)
+          team.map((id)=>{
+            this.usersService.update(id,{managerId:id})
+          })
+          await this.reloadService.loadTeamByManagerId(item)
+          }
+        }));
+      }
+      // Handle removed items
+      this.logger.log("remove item",removedItems)
+      if (removedItems.length) {
+        this.logger.log("remove",removedItems)
+        await Promise.all(removedItems.map(async (item:any) => {
+          const updateData = role === Roles.TEAM_LEAD ? { managerId: '', teamLeadId: '' } : { managerId: '' ,teamLeadId: '' };
+          await this.usersService.update(item, updateData);
+        }));
+      }
+      if(role===Roles.TEAM_LEAD){
+        await this.reloadService.loadTeamByManagerId(id)
+        await this.reloadService.loadTeamByManagerId(managerId)
+      }
+      else if (role===Roles.MANAGER){
+        await this.reloadService.loadTeamByManagerId(id)
+      }
+      
+
+    }
     const response = await this.usersService.update(id, updateUserDto);
+    await this.reloadService.updateUser(id)
     return response;
   }
 
+  @UseGuards(AuthGuard)
+  @Patch('/v1/user-manager/:id')
+  async updateManagerOrTL(@Param('id') id: string, @Body() params:any) {
+    let updateData={}
+    if (params.managerId)updateData['managerId']=params.managerId
+    if (params.teamLeadId)updateData['teamLeadId']=params.teamLeadId
+    let response= await this.usersService.update(id,updateData)
+    return response
+
+  }
   @UseGuards(AuthGuard)
   @Delete('/v1/user/:id')
   async remove(@Param('id') id: string) {
     this.logger.log('Request received to delete user', id);
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'DELETE');
     const response = await this.usersService.remove(id);
     return response;
   }
@@ -228,7 +311,9 @@ export class UsersController {
   async activate(@Param('id') id: string) {
     this.logger.log('Request received to activate user', id);
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'DELETE');
     const response = await this.usersService.activate(id);
+    await this.reloadService.loadUsers()
     return response;
   }
 
@@ -236,6 +321,7 @@ export class UsersController {
   @Get('/v1/users/names')
   async getNames() {
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'GET');
     this.logger.log('Request received to find names for all users');
     let query = {}
     // query['$or']=[
@@ -277,14 +363,17 @@ export class UsersController {
     return response;
   }
 
+  
+
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   @Post('/v1/users/search')
   async searchAll(@Body() params: SearchUsersDto) {
     this.logger.log('Request received to search in all users');
     const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'SEARCH');
     const userId: string = this.contextService.get('userId');
-        const department: string = this.contextService.get('department');
+    const department: string = this.contextService.get('userId');
 
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
@@ -295,33 +384,22 @@ export class UsersController {
     this.logger.log('params', params);
 
     switch (role) {
-
       case Roles.ADMIN:
         if (params?.userId) {
           query['userId'] = params.userId;
         }
-
         break;
       case Roles.MANAGER:
-        case Roles.TEAM_LEAD:
-          if(department.includes(Department.HR)  ){
-          }
-          else{
         let userIds: string[] = await this.cacheService.getTeamByManager(userId);
         userIds.push(userId);
         query = {
           userId: { $in: userIds },
         };
-      }
-        
         break;
       case Roles.AGENT:
       default:
-         if(department.includes(Department.HR)  ){
-          }
-          else{
+        if(department===Department.HR)
         query['userId'] = userId;
-          }
     }
     if (params?.userId) {
       query['_id'] = params.userId;
@@ -372,6 +450,13 @@ export class UsersController {
     }
   }
 
-  
+  @UseGuards(AuthGuard)
+  @Get('/v1/log-out-all-devices/:id')
+  async removeFromAllDevices(@Param('id') id: string) {
+
+    let response = []//await  this.usersService.logOutFromAllDevices(id)
+    return response
+
+  }
 
 }

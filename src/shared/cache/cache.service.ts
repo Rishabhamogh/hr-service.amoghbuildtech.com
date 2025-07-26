@@ -149,6 +149,37 @@ async getCache(key: string): Promise<any> {
       return '';
     }
   }
+   async isUserDeleted(userId: string) {
+    try {
+      this.logger.log('Get role for userId: ' + userId);
+      let str: string = await this.cacheManager.get('users');
+      if (!str) {
+        this.logger.error('Did not get users from cache');
+        return Roles.AGENT;
+      }
+      let users: any = JSON.parse(str);
+      // this.logger.debug('Users from cache:', users);
+      if (isEmpty(users)) {
+        this.logger.error('No user retrieved from cache, returning default');
+        return Roles.AGENT;
+      }
+      if (!isEmpty(users[userId])) {
+        this.logger.debug(
+          `User details from cache for userId ${userId}:`,
+          users[userId],
+        );
+        return users[userId]?.isDeleted;
+      }
+      this.logger.debug('Returning default role');
+      return Roles.AGENT;
+    } catch (error: any) {
+      this.logger.error(
+        `Error while fetching role for userId: ${userId}`,
+        error,
+      );
+      return Roles.AGENT;
+    }
+  }
   async getUserData(userId: string) {
     try {
       this.logger.log('Get Data for userId: ' + userId);

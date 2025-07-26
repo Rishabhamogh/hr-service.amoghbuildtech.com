@@ -12,6 +12,9 @@ import { CacheModule } from 'src/shared/cache/cache.module';
 // import { StartupModule } from 'src/startup/startup.module';
 // import { StartupService } from 'src/startup/startup.service';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { StartupModule } from 'src/startup/startup.module';
+import { ReloadService } from 'src/startup/reload.service';
+import { AccessControlService } from 'src/shared/access-control/access-control.service';
 
 @Module({
   imports: [
@@ -21,12 +24,14 @@ import { AuthGuard } from 'src/auth/auth.guard';
     RequestContextModule,
     ErrorHandlingModule,
     CacheModule,
-   // AuthGuard
+  //  AuthGuard
   ],
   controllers: [UsersController],
   providers: [
     UsersService,
     UserDbService,
+    ReloadService,
+    AccessControlService
     // StartupService,
   ],
   exports: [UsersService], 
