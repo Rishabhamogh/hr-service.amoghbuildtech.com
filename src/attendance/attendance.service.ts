@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Department, LeaveStatus, Roles } from 'src/common/constants/constants';
 import { LeavesService } from 'src/leaves/leaves.service';
 import { CacheService } from 'src/shared/cache/cache.service';
@@ -15,6 +15,8 @@ import { Attendance } from './schemas/attendance.schema';
 
 @Injectable()
 export class AttendanceService {
+      private readonly logger = new Logger(AttendanceService.name);
+
     constructor(
         private httpService:HttpRequestsService,
         private requestContextService:RequestContextService,
@@ -287,7 +289,7 @@ let resultArr=[]
             //  return user
       if(user){
       let leavesFilter={}
-      leavesFilter['userId']= user?._id ?Types.ObjectId.createFromHexString(user?._id):''
+      leavesFilter['userId']= user?._id ?Types.ObjectId.createFromHexString(user?._id):null
       // leavesFilter['status']=LeaveStatus.APPROVED
       leavesFilter['fromDate'] = { $gte: new Date(fromDate) };
       leavesFilter['toDate'] = { $lte: new Date(toDate) };
@@ -342,5 +344,144 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
         totalPages: Math.ceil(total / limit)
     };
 }
+
+async getEmployeeAttendanceDetails(
+  employeeCode: string,
+  fromDate?: string,
+  toDate?: string,
+  page: number = 1,
+  limit: number = 10
+) {
+  // Find userId for the employeeCode
+  const user = await this.userService.findOne({ employeeCode });
+  const userId = user?._id.toString();
+
+  // if (!userId) {
+  //   return {
+  //     employeeCode,
+  //     leaves: [],
+  //     OnDuty: [],
+  //     userDetails: null,
+  //     logs: {},
+  //     totalCount: 0,
+  //     currentPage: page,
+  //     totalPages: 0
+  //   };
+  // }
+
+  // Separate and log $match stage
+  const matchQuery: any = {
+    userId,
+    // employeeCode:"25",
+    ...(fromDate || toDate ? {
+      LogDate: {
+        ...(fromDate ? { $gte: new Date(fromDate) } : {}),
+        ...(toDate ? { $lte: new Date(toDate) } : {})
+      }
+    } : {})
+  };
+
+  this.logger.log('Match Query:', JSON.stringify(matchQuery, null, 2));
+
+  const countPipeline = [
+    { $match: matchQuery },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$LogDate" } }
+      }
+    },
+    { $count: "total" }
+  ];
+  const countResult = await this.attendanceModel.aggregate(countPipeline);
+  const totalCount = countResult[0]?.total || 0;
+  const totalPages = Math.ceil(totalCount / limit);
+
+  // Main pipeline with pagination
+  const pipeline = [
+    { $match: matchQuery },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$logDate" } },
+        logs: { $push: "$$ROOT" }
+      }
+    },
+    { $sort: { _id: 1 as 1 | -1 } },
+    { $skip: (page - 1) * limit },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: "leaveApplication",
+        let: { userId: "$logs.userId", date: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$userId", "$$userId"] },
+                  {
+                    $eq: [
+                      { $dateToString: { format: "%Y-%m-%d", date: "$fromDate" } },
+                      "$$date"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        as: "leaves"
+      }
+    },
+    {
+      $lookup: {
+        from: "onDuty",
+        let: { userId: "$logs.userId", date: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$userId", "$$userId"] },
+                  {
+                    $eq: [
+                      { $dateToString: { format: "%Y-%m-%d", date: "$fromDate" } },
+                      "$$date"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        as: "OnDuty"
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "logs.userId",
+        foreignField: "_id",
+        as: "userDetails"
+      }
+    }
+  ];
+
+  const result = await this.attendanceModel.aggregate(pipeline);
+
+  return {
+    employeeCode,
+    leaves: result[0]?.leaves || [],
+    OnDuty: result[0]?.OnDuty || [],
+    userDetails: result[0]?.userDetails?.[0] || null,
+    logs: result.reduce((acc, curr) => {
+      acc[curr._id] = curr.logs;
+      return acc;
+    }, {}),
+    totalCount,
+    totalPages,
+    currentPage: page
+  };
+}
+
 
 }

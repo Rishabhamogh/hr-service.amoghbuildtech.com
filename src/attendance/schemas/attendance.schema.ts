@@ -3,23 +3,27 @@ import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Attendance extends Document {
-  @Prop({ required: true })
-  EmployeeCode: string;
+  @Prop({ required: true ,unique: true})
+  employeeCode: string;
 
   @Prop({ required: true })
-  LogDate: string;
+  logDate: string;
 
   @Prop({ required: true })
-  SerialNumber: string;
+  serialNumber: string;
+
+  @Prop({ required: false })
+  userId: string;
+
 
   @Prop()
-  PunchDirection: string;
+  punchDirection: string;
 
   @Prop()
-  Temperature: number;
+  temperature: number;
 
   @Prop()
-  TemperatureState: string;
+  temperatureState: string;
 }
 
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);
