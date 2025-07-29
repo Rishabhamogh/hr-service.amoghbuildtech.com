@@ -12,6 +12,8 @@ import e from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Attendance } from './schemas/attendance.schema';
+ import { PipelineStage } from 'mongoose';
+import { HRStausService } from 'src/hr-status/hr-status.service';
 
 @Injectable()
 export class AttendanceService {
@@ -24,6 +26,8 @@ export class AttendanceService {
         private userService:UsersService,
         private leaves:LeavesService,
         private ODService:OnDutyService,
+        private hrstatus:HRStausService,
+
         @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
@@ -149,6 +153,12 @@ try {
           const leaves = await this.leaves.findAllWithouPagination(leavesFilter);
 
           const OnDuty = await this.ODService.findAllWithouPagination(leavesFilter);
+
+          let hrStatusQuery = {}; 
+          hrStatusQuery['userId'] = Types.ObjectId.createFromHexString(user?._id)
+          hrStatusQuery['date'] = { $gte: new Date(fromDate), $lte: new Date(toDate) };
+          const hrStatus=    await this.hrstatus.findAllWithouPagination({});
+
           console.log("onduty",OnDuty)
           // Prepare user details
           console.log("user",user )
@@ -158,7 +168,8 @@ try {
             Name: user?.Name || user.name,
             Department: user?.Department || user.department,
             userId: user?.userId || user._id,
-            weekEnds: user?.weekEnds
+            weekEnds: user?.weekEnds,
+            hrStatus
           };
           
           // Store in map
@@ -297,13 +308,17 @@ let resultArr=[]
      let leaves=await this.leaves.findAllWithouPagination(leavesFilter)
 
     let OnDuty=await this.ODService.findAllWithouPagination(leavesFilter)
-
+ let hrStatusQuery = {}; 
+          hrStatusQuery['userId'] = Types.ObjectId.createFromHexString(user?._id)
+          hrStatusQuery['date'] = { $gte: new Date(fromDate), $lte: new Date(toDate) };
+          const hrStatus=    await this.hrstatus.findAllWithouPagination({});
       // Store  logs and user details inside the employeeCode object
       console.log("empdo",empCode)
       filteredData[empCode] = {
           logs: groupedLogs,
           leaves,
           OnDuty,
+          hrStatus,
           employeeCode: empCode,
           userDetails: {
               EmployeeCode: user?.EmployeeCode || userDetails.EmployeeCode,
@@ -327,13 +342,14 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
     
     if (employeeCode) query.EmployeeCode = employeeCode;
     if (fromDate || toDate) {
-        query.LogDate = {};
-        if (fromDate) query.LogDate.$gte = new Date(fromDate);
-        if (toDate) query.LogDate.$lte = new Date(toDate);
+        query.logDate = {};
+        if (fromDate) query.logDate.$gte = new Date(fromDate);
+        if (toDate) query.logDate.$lte = new Date(toDate);
     }
+    console.log("query",query)
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-        this.attendanceModel.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
+        this.attendanceModel.find().skip(skip).limit(limit).sort({ LogDate: -1 }),
         this.attendanceModel.countDocuments(query)
     ]);
     return {
@@ -346,130 +362,119 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
 }
 
 async getEmployeeAttendanceDetails(
-  employeeCode: string,
+  query: any,
   fromDate?: string,
   toDate?: string,
   page: number = 1,
   limit: number = 10
 ) {
-  // Find userId for the employeeCode
-  const user = await this.userService.findOne({ employeeCode });
-  const userId = user?._id.toString();
+  const matchQuery: any = {};
 
-  // if (!userId) {
-  //   return {
-  //     employeeCode,
-  //     leaves: [],
-  //     OnDuty: [],
-  //     userDetails: null,
-  //     logs: {},
-  //     totalCount: 0,
-  //     currentPage: page,
-  //     totalPages: 0
-  //   };
-  // }
+  if (query.userId) matchQuery.userId = { $in: query.userId };
 
-  // Separate and log $match stage
-  const matchQuery: any = {
-    userId,
-    // employeeCode:"25",
-    ...(fromDate || toDate ? {
-      LogDate: {
-        ...(fromDate ? { $gte: new Date(fromDate) } : {}),
-        ...(toDate ? { $lte: new Date(toDate) } : {})
-      }
-    } : {})
-  };
+  // Optional filtering by date
+  if (fromDate || toDate) {
+    matchQuery.logDate = {
+      ...(fromDate ? { $gte: new Date(fromDate) } : {}),
+      ...(toDate ? { $lte: new Date(toDate) } : {})
+    };
+  }
 
   this.logger.log('Match Query:', JSON.stringify(matchQuery, null, 2));
 
   const countPipeline = [
     { $match: matchQuery },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$LogDate" } }
-      }
-    },
     { $count: "total" }
   ];
   const countResult = await this.attendanceModel.aggregate(countPipeline);
   const totalCount = countResult[0]?.total || 0;
   const totalPages = Math.ceil(totalCount / limit);
 
-  // Main pipeline with pagination
-  const pipeline = [
-    { $match: matchQuery },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$logDate" } },
-        logs: { $push: "$$ROOT" }
-      }
-    },
-    { $sort: { _id: 1 as 1 | -1 } },
-    { $skip: (page - 1) * limit },
-    { $limit: limit },
-    {
-      $lookup: {
-        from: "leaveApplication",
-        let: { userId: "$logs.userId", date: "$_id" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$userId", "$$userId"] },
-                  {
-                    $eq: [
-                      { $dateToString: { format: "%Y-%m-%d", date: "$fromDate" } },
-                      "$$date"
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        as: "leaves"
-      }
-    },
-    {
-      $lookup: {
-        from: "onDuty",
-        let: { userId: "$logs.userId", date: "$_id" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$userId", "$$userId"] },
-                  {
-                    $eq: [
-                      { $dateToString: { format: "%Y-%m-%d", date: "$fromDate" } },
-                      "$$date"
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        ],
-        as: "OnDuty"
-      }
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "logs.userId",
-        foreignField: "_id",
-        as: "userDetails"
+
+const pipeline: PipelineStage[] = [
+  // { $match: matchQuery },
+  {
+    $addFields: {
+      logDate: {
+        $cond: {
+          if: { $eq: [{ $type: "$logDate" }, "date"] },
+          then: "$logDate",
+          else: null
+        }
       }
     }
-  ];
+  },
+  { $match: { logDate: { $ne: null } } },
+  {
+    $group: {
+      _id: { $dateToString: { format: "%Y-%m-%d", date: "$logDate" } },
+      logs: { $push: "$$ROOT" }
+    }
+  },
+  { $sort: { _id: 1 } },
+  { $skip: (page - 1) * limit },
+  { $limit: limit },
+  {
+    $lookup: {
+      from: "leaveApplication",
+      let: { logUserId: { $arrayElemAt: ["$logs.userId", 0] }, date: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$userId", "$$logUserId"] },
+                {
+                  $eq: [
+                    { $dateToString: { format: "%Y-%m-%d", date: "$fromDate" } },
+                    "$$date"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      as: "leaves"
+    }
+  },
+  {
+    $lookup: {
+      from: "onDuty",
+      let: { logUserId: { $arrayElemAt: ["$logs.userId", 0] }, date: "$_id" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$userId", "$$logUserId"] },
+                {
+                  $eq: [
+                    { $dateToString: { format: "%Y-%m-%d", date: "$fromDate" } },
+                    "$$date"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      as: "OnDuty"
+    }
+  },
+  {
+    $lookup: {
+      from: "users",
+      localField: "logs.userId",
+      foreignField: "_id",
+      as: "userDetails"
+    }
+  }
+];
 
   const result = await this.attendanceModel.aggregate(pipeline);
 
   return {
-    employeeCode,
     leaves: result[0]?.leaves || [],
     OnDuty: result[0]?.OnDuty || [],
     userDetails: result[0]?.userDetails?.[0] || null,
@@ -482,6 +487,7 @@ async getEmployeeAttendanceDetails(
     currentPage: page
   };
 }
+
 
 
 }
