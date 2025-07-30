@@ -76,6 +76,7 @@ export class UsersController {
     this.logger.log('Request received to find all users');
     const role: string = this.contextService.get('role');
     const userId: string = this.contextService.get('userId');
+    const department: string = this.contextService.get('department');
     let query = {};
     this.accessControlService.check(role, 'users', 'GET');
     const pageNumber: number = Number(params?.pageNumber) || 0;
@@ -85,18 +86,27 @@ export class UsersController {
     const sortDir: string = params?.sortDir || 'DESC';
     switch (role) {
       case Roles.MANAGER:
-        {
+      case Roles.TEAM_LEAD:
+      if(department?.includes(Department.HR)){
+      }
+       else {
           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
           userIds.push(userId);
           query = {
             _id: { $in: userIds },
           };
         }
+      
         break;
       case Roles.AGENT: {
-        query = {
-          _id: userId,
-        };
+        if (department?.includes(Department.HR)) {
+          query['userId'] = userId;
+        } else {
+          query = {
+            _id: userId,
+          };
+        }
+       break;
       }
     }
 
@@ -226,7 +236,15 @@ export class UsersController {
     this.logger.log('Request received to update userId: ' + id);
     let role: string = this.contextService.get('role');
     this.accessControlService.check(role, 'users', 'PATCH');
-    if (updateUserDto.managerId || updateUserDto.teamLeadId) {
+    let idRole=await this.cacheService.getRoleById(id)
+    if((idRole===Roles.TEAM_LEAD ||idRole===Roles.AGENT)  && updateUserDto?.role && (updateUserDto?.role===Roles.MANAGER || updateUserDto?.role===Roles.TEAM_LEAD)){
+            //  let mangerId=await this.cacheService.getManagerById(id)
+            this.logger.log("id role",idRole)
+             await this.usersService.removeFromAllTeams(id)
+    // await   this.removeFromTeam({userIds:[id]},mangerId)
+    }
+
+    if (updateUserDto.managerId || updateUserDto.teamLeadId && !updateUserDto?.role) {
       await this.cacheService.getRoleById(id)
       await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
       await this.reloadService.loadTeamByManagerId(updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId)
@@ -235,6 +253,24 @@ export class UsersController {
        updateUserDto.managerId=mangerId
       }
     }
+    if(updateUserDto?.changeTLManager){
+      if(updateUserDto?.changeTLManager!=="team"){
+       let mangerId=await this.cacheService.getManagerById(id)
+      let team=await  this.cacheService.getTeamByManager(id)
+     await Promise.all( team.map(async(userId:any)=>{
+       await  this.usersService.changeManager(userId,mangerId,"managerId")
+      }))
+    //  await this.addToTeam(mangerId,{userIds:team})
+
+    // await  this.removeFromTeam({userIds:team},id)
+
+      await this.reloadService.loadTeamByManagerId(id)
+      await this.reloadService.loadTeamByManagerId(mangerId)
+
+
+      }
+    }
+
     if (updateUserDto?.team?.length) {
       let userPreviusData = await this.usersService.findUser({ _id: id })
       role= userPreviusData.role
