@@ -60,9 +60,9 @@ if(employeeCode && machineNumber){
         case Roles.TEAM_LEAD:
           console.log("MANAGER")
           if( department?.includes(Department.HR)){
-                        if(employeeCode && machineNumber){
+                        if(employeeCode ){
 
-           let res= this.filterData([employeeCode],[machineNumber],response,  fromDate,toDate)
+           let res= this.filterData([employeeCode],["machineNumber"],response,  fromDate,toDate)
            return res
                         }
           }
@@ -92,8 +92,8 @@ if(employeeCode && machineNumber){
         case Roles.AGENT:
           if(department?.includes(Department.HR)){
             console.log("AGET finance case 1")
-            if(employeeCode && machineNumber){
-          let res= this.filterData([employeeCode],[machineNumber],response,  fromDate,toDate)
+            if(employeeCode ){
+          let res= this.filterData([employeeCode],["machineNumber"],response,  fromDate,toDate)
            return res
             }
 
@@ -266,7 +266,7 @@ return {
 
 async  filterData(employeeCodes, serialNumbers,response ,fromDate:Date,toDate:Date){ 
   let filteredData = {};
-console.log("emd",employeeCodes,serialNumbers)
+// console.log("emd",employeeCodes,serialNumbers)
 let resultArr=[]
   for (const empCode of employeeCodes) {
     console.log("Eee",empCode)
@@ -288,7 +288,7 @@ let resultArr=[]
 
       // Fetch user details from cache or database
       let userDetails = response.find(log => String(log.EmployeeCode) === String(empCode)) || {};
-      const machineNumber = userDetails.MachineNumber || "default"; // Handle missing MachineNumber
+      // const machineNumber = userDetails.MachineNumber || "default"; // Handle missing MachineNumber
       // const cacheKey = `userDetails:${empCode}-${machineNumber}`;
       // const cacheKey = `userDetails:${empCode}-${machineNumber}`;
             const cacheKey = empCode;
