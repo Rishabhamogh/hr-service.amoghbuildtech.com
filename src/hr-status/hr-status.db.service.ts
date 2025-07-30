@@ -19,7 +19,7 @@ export class HRStatusDbService {
             return response
         }
         catch(error){
-            this.dbErrorService.handle(error)
+         this.dbErrorService.handle(error)
         }
     }
 

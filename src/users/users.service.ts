@@ -541,6 +541,18 @@ console.log("prevManager",userId)
     await this.addToTeam(managerId, [userId])
   }
 
+  async removeFromAllTeams(userId: string) {  
+    this.logger.debug('Request received to remove userId: ' + userId + ' from all teams');
+    let managers = await this.getUserByFields({ '$or': [{ role: Roles.MANAGER }, { role: Roles.TEAM_LEAD }] }, ['team'], '')
+    for (const manager of managers) {
+      if (manager?.team?.includes(userId)) {
+        await this.removeFromTeam(manager._id, [userId], '', 'managerId')
+      }
+    }
+    this.logger.debug('User removed from all teams successfully');
+
+  }
+
   async logOutFromAllDevices(userId:string){
    // this.authGaurd.canActivate
   }

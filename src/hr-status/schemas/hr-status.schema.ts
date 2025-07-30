@@ -25,6 +25,9 @@ export class HRStatus {
 
     @Prop({required:false})
     status:string
+
+     @Prop()
+    reason:string
   
   
 

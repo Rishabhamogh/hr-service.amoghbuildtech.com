@@ -37,6 +37,11 @@ export class CreateUserDto {
     @IsString()
     @IsOptional()
     teamLeadId:string
+
+    
+    @IsString()
+    @IsOptional()
+    changeTLManager:string
     
 
     @IsArray()

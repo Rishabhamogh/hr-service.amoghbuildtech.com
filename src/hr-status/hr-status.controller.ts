@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { privateDecrypt } from 'crypto';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Types } from 'mongoose';
@@ -18,8 +18,14 @@ export class HRStatusController {
   ) { }
   @Post()
   async create(@Body() payload: any) {
+    try{
     let response = await this.HRStatusService.create(payload)
     return response
+    }
+    catch (error) {
+      console.error("Error in creating HR status:", error);
+      throw new BadRequestException("Failed to create HR status",error);
+    }
   }
   @Get('/:id')
   async notification(@Param('id') id: any) {
