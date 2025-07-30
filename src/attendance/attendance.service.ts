@@ -60,7 +60,11 @@ if(employeeCode && machineNumber){
         case Roles.TEAM_LEAD:
           console.log("MANAGER")
           if( department?.includes(Department.HR)){
-           console.log("HR finance Manger 1")
+                        if(employeeCode && machineNumber){
+
+           let res= this.filterData([employeeCode],[machineNumber],response,  fromDate,toDate)
+           return res
+                        }
           }
           else{
             console.log("login",LoginUserId)
@@ -88,6 +92,11 @@ if(employeeCode && machineNumber){
         case Roles.AGENT:
           if(department?.includes(Department.HR)){
             console.log("AGET finance case 1")
+            if(employeeCode && machineNumber){
+          let res= this.filterData([employeeCode],[machineNumber],response,  fromDate,toDate)
+           return res
+            }
+
           }
           else{
           

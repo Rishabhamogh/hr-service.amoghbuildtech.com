@@ -16,6 +16,8 @@ export class Leave {
   @Prop({required:false})
   totalLeaves:number
   @Prop({required:false})
+  totalLeavesProvided:number
+  @Prop({required:false})
   type:string
   @Prop({ required: false })
   year: string;

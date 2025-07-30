@@ -206,8 +206,7 @@ export class LeavesController {
       query['createdAt'] = value;
     }
 
-    console.log("role", role)
-    console.log("useId", userId)
+    
 
     query['userId'] = new Types.ObjectId(userId);
     if (params?.userId) {
