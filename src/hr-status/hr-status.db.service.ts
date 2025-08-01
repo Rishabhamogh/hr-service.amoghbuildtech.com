@@ -27,7 +27,7 @@ export class HRStatusDbService {
         limit: number,
         sortKey: string,
         sortDir: string,
-        query: any = {}){
+        query: any ){
         try{
             console.log("query",query)
             const sortObj: any = {
