@@ -9,6 +9,8 @@ import { ErrorHandlingModule } from 'src/shared/error-handling/error-handling.mo
 import { RequestContextModule } from 'src/shared/request-context/request-context.module';
 import { CacheModule } from 'src/shared/cache/cache.module';
 import { JwtModule } from '@nestjs/jwt';
+import { WhatsAppModule } from 'src/users/whatsapp/whatsapp.module';
+import { MailModule } from 'src/mail/mail.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -18,7 +20,10 @@ import { JwtModule } from '@nestjs/jwt';
     ErrorHandlingModule,
     CacheModule,
     JwtModule,
-    RequestContextModule
+    RequestContextModule,
+    WhatsAppModule,
+    MailModule,
+    
  ],
   providers: [LeavesService, LeaveDbService],
   controllers: [LeavesController],

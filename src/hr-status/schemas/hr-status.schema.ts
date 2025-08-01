@@ -5,6 +5,28 @@ export type OnDutyDocument = HydratedDocument<HRStatus>;
 
 
 @Schema({ collection: 'hrStatus', timestamps: true })
+class Logs{
+    @Prop()
+    employeeCode: string;
+  
+    @Prop({ required: false })
+    type: string;
+  
+    @Prop({ required: false })
+    date: Date;
+    
+    
+    
+    @Prop({required:true})
+    userId:mongoose.Types.ObjectId;
+  
+
+    @Prop({required:false})
+    status:string
+
+     @Prop()
+    reason:string
+}
 export class HRStatus {
 
     
@@ -29,6 +51,9 @@ export class HRStatus {
      @Prop()
     reason:string
   
+    @Prop({ required: false })
+    logs:[Logs]
+    
   
 
 }

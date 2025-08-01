@@ -509,7 +509,7 @@ export class UsersService {
     this.logger.debug('Remove from team:', id);
     let response = await Promise.all(userIds.map(async (userId) => {
       await this.dbService.removeFromArray(id, 'team', userId)
-      this.logger.debug('update managerID:', managerId, );
+      this.logger.debug('update managerID:', managerId);
       this.logger.debug('feild to change:', feildTochange, );
 
     await this.dbService.updateOne(userId, { feildTochange : managerId ? managerId : '' })

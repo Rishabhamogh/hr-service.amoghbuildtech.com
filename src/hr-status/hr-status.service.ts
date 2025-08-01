@@ -37,6 +37,7 @@ export class HRStausService {
     }
     async updatePermission(filter:any,payload:any){
             const response= await this.HRStatusDbService.update(filter, { $set: payload })
+                this.addInArray(filter._id,"logs",payload.logs,payload.userId)
             return response
        
     }

@@ -4,6 +4,10 @@ import { Model, Types } from "mongoose";
 import { DatabaseErrorService } from "src/shared/error-handling/database-error.service";
 import { query } from "express";
 import { LeaveDbService } from "./leave-db.service";
+import { WhatsAppService } from "src/users/whatsapp/whatsapp.service";
+import { MailService } from "src/mail/mail.service";
+import { CacheService } from "src/shared/cache/cache.service";
+import { LeaveStatus } from "src/common/constants/constants";
 
 
 @Injectable()
@@ -11,13 +15,43 @@ export class LeavesService {
       private readonly logger = new Logger(LeavesService.name);
 
     constructor(
-       private leaveDbService:LeaveDbService
+       private leaveDbService:LeaveDbService,
+       private whatsappService: WhatsAppService,
+       private mailService: MailService,
+       private cacheService: CacheService,
     
     ) { }
 
     async create(payload: any) {
         payload['userId']= Types.ObjectId.createFromHexString(payload.userId)
         const response = await this.leaveDbService.saveLeaveApplication(payload)
+        // let res= await this.whatsappService.sendWhatsAppMessage(payload.mobile,[payload.firstName,payload.lastName],payload.type)
+const res = await this.cacheService.getUserData(payload.userId);
+    const managerId = await this.cacheService.getManagerById(payload.userId);
+      this.logger.log(`On Duty request created for user: ${managerId}`);
+      this.logger.log(`On Duty request created for user: ${res}`,payload);
+    if (managerId) {
+      const managerData = await this.cacheService.getUserData(managerId);
+      console.log('Manager data:', managerData);
+
+ await this.mailService.sendMailTemplate(
+    managerData.emailId,
+    'leave' ,
+    'requestSubmitted',
+    {
+      recipientName: res.name,
+      employeeName: res.name,
+      // employeeLastName: res.lastName,
+      type: payload.type,
+      fromDate: payload.fromDate,
+      toDate: payload.toDate,
+      reason: payload.reason
+    }
+  );
+    }
+
+
+    
             return response
     }
         
@@ -68,7 +102,28 @@ export class LeavesService {
        return response
     }
     async update(filter:any,payload:any){
-            const response= await this.leaveDbService.update(filter, { $set: payload })
+            const response :any= await this.leaveDbService.update(filter, { $set: payload })
+            this.logger.log("resss",response)
+            if(payload.status === LeaveStatus.APPROVED || payload.status === LeaveStatus.REJECTED) {
+              const userData = await this.cacheService.getUserData(response.userId.toString());
+              this.logger.log(`On Duty request updated for user: ${userData}`, payload);
+              if (userData) {
+                 await this.mailService.sendMailTemplate(
+    userData.emailId,
+    'leave' ,
+    'requestSubmitted',
+    {
+      recipientName: userData.name,
+      // employeeName: res.firstName,
+      // employeeLastName: res.lastName,
+      type: payload.type,
+      fromDate: payload.fromDate,
+      toDate: payload.toDate,
+      reason: payload.reason
+    }
+  );
+              }
+            }
             return response
        
     }

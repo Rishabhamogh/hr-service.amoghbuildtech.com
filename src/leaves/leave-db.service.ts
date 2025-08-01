@@ -59,7 +59,7 @@ export class LeaveDbService {
     }
     async update(filter:any,query:any){
         try{
-            const response= await this.leaveApplication.updateOne(filter,query)
+            const response= await this.leaveApplication.findOneAndUpdate(filter,query,{new:true})
             return response
         }
         catch(error){

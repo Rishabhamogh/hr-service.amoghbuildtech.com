@@ -57,7 +57,7 @@ export class OnDutyDbService {
     }
     async update(filter:any,query:any){
         try{
-            const response= await this.onDuty.updateOne(filter,query)
+            const response= await this.onDuty.findOneAndUpdate(filter,query,{new:true})
             return response
         }
         catch(error){

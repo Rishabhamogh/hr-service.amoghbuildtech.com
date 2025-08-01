@@ -4,6 +4,9 @@ import { Model, Types } from "mongoose";
 import { DatabaseErrorService } from "src/shared/error-handling/database-error.service";
 import { query } from "express";
 import { OnDutyDbService } from "./on-duty-db.service";
+import { WhatsAppService } from "src/users/whatsapp/whatsapp.service";
+import { CacheService } from "src/shared/cache/cache.service";
+import { MailService } from "src/mail/mail.service";
 
 
 @Injectable()
@@ -11,15 +14,64 @@ export class OnDutyService {
           private readonly logger = new Logger(OnDutyService.name);
     
     constructor(
-       private leaveDbService:OnDutyDbService
+       private leaveDbService:OnDutyDbService,
+        private whatsappService: WhatsAppService,
+        private cacheService: CacheService,
+        private mailService: MailService,
     
     ) { }
 
     async create(payload: any) {
-        payload['userId']= Types.ObjectId.createFromHexString(payload.userId)
-        const response = await this.leaveDbService.save(payload)
-            return response
+    payload['userId'] = Types.ObjectId.createFromHexString(payload.userId);
+    const response = await this.leaveDbService.save(payload);
+    const res = await this.cacheService.getUserData(payload.userId);
+    const managerId = await this.cacheService.getManagerById(payload.userId);
+      this.logger.log(`On Duty request created for user: ${managerId}`);
+      this.logger.log(`On Duty request created for user: ${res}`,payload);
+    if (managerId) {
+      const managerData = await this.cacheService.getUserData(managerId);
+      console.log('Manager data:', managerData);
+
+    await this.mailService.sendMailTemplate(
+    managerData.emailId,
+    'onDuty' ,
+    'requestSubmitted',
+    {
+      recipientName: managerData.name,
+      employeeName: res.name,
+      // employeeLastName: res.lastName,
+      type: payload.type,
+      fromDate: payload.fromDate,
+      toDate: payload.toDate,
+      reason: payload.reason
     }
+  );
+      
+      // await this.whatsappService.sendWhatsAppMessage(
+      //   managerData.mobile,
+      //   [res.firstName, res.lastName],
+      //   payload.type
+      // );
+    }
+
+    await this.mailService.sendMailTemplate(
+    res.emailId,
+    'onDuty' ,
+    'requestSubmitted',
+    {
+      recipientName: res.firstName,
+      employeeName: res.firstName,
+      // employeeLastName: res.lastName,
+      type: payload.type,
+      fromDate: payload.fromDate,
+      toDate: payload.toDate,
+      reason: payload.reason
+    }
+  );
+   
+
+    return response;
+}
         
     
 
@@ -36,7 +88,29 @@ export class OnDutyService {
        return response
     }
     async updatePermission(filter:any,payload:any){
+        
             const response= await this.leaveDbService.update(filter, { $set: payload })
+            this.logger.log("resss",response)
+            if(payload.status === 'APPROVED' || payload.status === 'REJECTED') {
+              const userData = await this.cacheService.getUserData(response.userId.toString());
+              this.logger.log(`On Duty request updated for user: ${userData}`, payload);
+              if (userData) {
+                 await this.mailService.sendMailTemplate(
+    userData.emailId,
+    'onDuty' ,
+    'requestSubmitted',
+    {
+      recipientName: userData.name,
+      // employeeName: response.firstName,
+      // employeeLastName: res.lastName,
+      type: payload.type,
+      fromDate: payload.fromDate,
+      toDate: payload.toDate,
+      reason: payload.reason
+    }
+  );
+              }
+            }
             return response
        
     }
@@ -50,6 +124,7 @@ export class OnDutyService {
         let response=await this.leaveDbService.findOne(query)
         return response
     }
+     
 
     async findAllWithouPagination(query:any){
         let response=await this.leaveDbService.findAllWithoutPagination(query)

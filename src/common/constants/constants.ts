@@ -193,6 +193,9 @@ export enum Department{
 export enum LeaveStatus{
   APPROVED="APPROVED",
   PENDING="PENDING",
-  REJECT="REJECT"
+  REJECTED="REJECTED"
  
 }
+// types/mail.types.ts
+export type TemplateType = 'leave' | 'onDuty';
+export type TemplateStatus = 'requestSubmitted' | 'requestApproved' | 'requestRejected';

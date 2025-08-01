@@ -42,7 +42,7 @@ export class OnDuty {
     @Prop({ required: false })
     duration:string
     
-    @Prop({required:false})
+    @Prop({required:true})
     userId:mongoose.Types.ObjectId;
   
     @Prop({required:false, default:"PENDING"})
