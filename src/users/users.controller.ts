@@ -411,7 +411,7 @@ export class UsersController {
     const role: string = this.contextService.get('role');
     this.accessControlService.check(role, 'users', 'SEARCH');
     const userId: string = this.contextService.get('userId');
-    const department: string = this.contextService.get('userId');
+    const department: string = this.contextService.get('department');
 
     const pageNumber: number = Number(params?.pageNumber) || 0;
     const limit: number = Number(params?.size) || 8;
@@ -419,8 +419,7 @@ export class UsersController {
     const sortKey: string = params?.sortKey || 'createdAt';
     const sortDir: string = params?.sortDir || 'DESC';
     let query = {};
-    this.logger.log('params', params);
-
+  
     switch (role) {
       case Roles.ADMIN:
         if (params?.userId) {
@@ -430,6 +429,7 @@ export class UsersController {
       case Roles.MANAGER:
         case Roles.TEAM_LEAD:
         if (department?.includes(Department.HR)) {  
+            this.logger.log("HR  Manger conditon run")
         }
         else {
           let userIds: string[] = await this.cacheService.getTeamByManager(userId);
@@ -441,7 +441,7 @@ export class UsersController {
         break;
       case Roles.AGENT:
       default:
-        if(department===Department.HR){
+        if(department?.includes(Department.HR)){
         }
         else{
           query = {
