@@ -111,7 +111,7 @@ const res = await this.cacheService.getUserData(payload.userId);
                  await this.mailService.sendMailTemplate(
     userData.emailId,
     'leave' ,
-    'requestSubmitted',
+  payload.status===LeaveStatus.APPROVED? 'requestApproved':'requestRejected',
     {
       recipientName: userData.name,
       // employeeName: res.firstName,

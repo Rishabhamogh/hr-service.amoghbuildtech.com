@@ -196,6 +196,12 @@ export enum LeaveStatus{
   REJECTED="REJECTED"
  
 }
+export enum OnDutyStatus{
+  APPROVED="APPROVED",
+  PENDING="PENDING",
+  REJECTED="REJECTED"
+ 
+}
 // types/mail.types.ts
 export type TemplateType = 'leave' | 'onDuty';
 export type TemplateStatus = 'requestSubmitted' | 'requestApproved' | 'requestRejected';

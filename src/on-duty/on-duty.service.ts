@@ -7,6 +7,7 @@ import { OnDutyDbService } from "./on-duty-db.service";
 import { WhatsAppService } from "src/users/whatsapp/whatsapp.service";
 import { CacheService } from "src/shared/cache/cache.service";
 import { MailService } from "src/mail/mail.service";
+import { OnDutyStatus } from "src/common/constants/constants";
 
 
 @Injectable()
@@ -98,7 +99,7 @@ export class OnDutyService {
                  await this.mailService.sendMailTemplate(
     userData.emailId,
     'onDuty' ,
-    'requestSubmitted',
+    payload.status===OnDutyStatus.APPROVED?'requestApproved': 'requestRejected',
     {
       recipientName: userData.name,
       // employeeName: response.firstName,
