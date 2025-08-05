@@ -41,6 +41,9 @@ export class OnDuty {
     reason: string;
     @Prop({ required: false })
     duration:string
+
+     @Prop({ required: false })
+    statusUpadtedBy:string
     
     @Prop({required:true})
     userId:mongoose.Types.ObjectId;

@@ -125,6 +125,7 @@ private getTemplate(templateType: TemplateType, status: TemplateStatus) {
       fromDate?: string;
       toDate?: string;
       reason?: string;
+      statusUpadtedBy?: string;
       managerName?: string;
       rejectionReason?: string;
     }
@@ -134,6 +135,7 @@ private getTemplate(templateType: TemplateType, status: TemplateStatus) {
       const template = this.getTemplate(templateType, status);
 
       // Function to replace variables in a string
+      
       const replaceVariables = (text: string) => {
         return Object.keys(templateVars).reduce((result, key) => {
           return result.replace(

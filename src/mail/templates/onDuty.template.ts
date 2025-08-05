@@ -35,7 +35,7 @@ export const onDutyTemplates = {
           <p><strong>Type:</strong> {{type}}</p>
           <p><strong>From Date:</strong> {{fromDate}}</p>
           <p><strong>To Date:</strong> {{toDate}}</p>
-          <p><strong>Approved by:</strong> {{managerName}}</p>
+          <p><strong>Approved by:</strong> {{statusUpadtedBy}}</p>
         </div>
 
         <p>Best regards,<br>
@@ -56,8 +56,8 @@ export const onDutyTemplates = {
           <p><strong>Type:</strong> {{type}}</p>
           <p><strong>From Date:</strong> {{fromDate}}</p>
           <p><strong>To Date:</strong> {{toDate}}</p>
-          <p><strong>Rejected by:</strong> {{managerName}}</p>
-          <p><strong>Reason:</strong> {{rejectionReason}}</p>
+          <p><strong>Rejected by:</strong> {{statusUpadtedBy}}</p>
+          <p><strong>Reason:</strong> {{reason}}</p>
         </div>
 
         <p>Please contact your manager for more details.</p>

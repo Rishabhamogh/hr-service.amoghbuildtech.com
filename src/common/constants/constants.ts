@@ -193,13 +193,13 @@ export enum Department{
 export enum LeaveStatus{
   APPROVED="APPROVED",
   PENDING="PENDING",
-  REJECTED="REJECTED"
+  REJECT="REJECT"
  
 }
 export enum OnDutyStatus{
   APPROVED="APPROVED",
   PENDING="PENDING",
-  REJECTED="REJECTED"
+  REJECT="REJECT"
  
 }
 // types/mail.types.ts

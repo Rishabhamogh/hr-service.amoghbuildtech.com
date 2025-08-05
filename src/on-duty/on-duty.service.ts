@@ -55,20 +55,20 @@ export class OnDutyService {
       // );
     }
 
-    await this.mailService.sendMailTemplate(
-    res.emailId,
-    'onDuty' ,
-    'requestSubmitted',
-    {
-      recipientName: res.firstName,
-      employeeName: res.firstName,
-      // employeeLastName: res.lastName,
-      type: payload.type,
-      fromDate: payload.fromDate,
-      toDate: payload.toDate,
-      reason: payload.reason
-    }
-  );
+  //   await this.mailService.sendMailTemplate(
+  //   res.emailId,
+  //   'onDuty' ,
+  //   'requestSubmitted',
+  //   {
+  //     recipientName: res.firstName,
+  //     employeeName: res.firstName,
+  //     // employeeLastName: res.lastName,
+  //     type: payload.type,
+  //     fromDate: payload.fromDate,
+  //     toDate: payload.toDate,
+  //     reason: payload.reason
+  //   }
+  // );
    
 
     return response;
@@ -92,22 +92,25 @@ export class OnDutyService {
         
             const response= await this.leaveDbService.update(filter, { $set: payload })
             this.logger.log("resss",response)
-            if(payload.status === 'APPROVED' || payload.status === 'REJECTED') {
+            if(payload.status === OnDutyStatus.APPROVED || payload.status === OnDutyStatus.REJECT) {
               const userData = await this.cacheService.getUserData(response.userId.toString());
-              this.logger.log(`On Duty request updated for user: ${userData}`, payload);
+              const managerId = await this.cacheService.getUserData(response.managerId.toString());
+              this.logger.log(`On Duty request updated for user: ${managerId}`, payload);
               if (userData) {
+                this.logger.log("mm",managerId);
+                // return managerId
                  await this.mailService.sendMailTemplate(
     userData.emailId,
     'onDuty' ,
     payload.status===OnDutyStatus.APPROVED?'requestApproved': 'requestRejected',
-    {
+    { 
       recipientName: userData.name,
-      // employeeName: response.firstName,
-      // employeeLastName: res.lastName,
-      type: payload.type,
-      fromDate: payload.fromDate,
-      toDate: payload.toDate,
-      reason: payload.reason
+      employeeName: userData.name,
+      type: response.type,
+      fromDate : response.fromDate.toLocaleDateString(),
+      toDate : response.toDate.toLocaleDateString(),
+      statusUpadtedBy:   response?.statusUpadtedBy || managerId?.name || 'MANAGER Name',
+      reason: response.feedback.length > 0 ? response.feedback[0].value : '',
     }
   );
               }
