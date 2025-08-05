@@ -133,7 +133,7 @@ export class HRStatusController {
 
           }
         }
-        query['userId'] = new Types.ObjectId(userId)
+        else { query['userId'] = new Types.ObjectId(userId)}
 
       }
       default: {
