@@ -88,7 +88,7 @@ export class HRStatusController {
       case Roles.MANAGER:
       case Roles.TEAM_LEAD:
         {
-          if (department == Department.HR) {
+          if (department?.includes(Department.HR)) {
 
           }
           else {
@@ -116,7 +116,7 @@ export class HRStatusController {
         }
         break;
       case Roles.AGENT: {
-        if (department == Department.HR) {
+        if (department?.includes(Department.HR)) {
   if (params?.userId) {
             let role = await this.cacheService.getRoleById(params?.userId);
             if(role===Roles.TEAM_LEAD || role===Roles.MANAGER){
