@@ -12,6 +12,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Attendance, AttendanceSchema } from './schemas/attendance.schema';
 import { AttendanceCron } from './attendance.cron';
 import { HRModule } from 'src/hr-status/hr-status.module';
+import { AttendanceSummary, AttendanceSummarySchema } from './schemas/attendance-summary.schema';
 
 @Module({
   imports:[
@@ -22,7 +23,10 @@ import { HRModule } from 'src/hr-status/hr-status.module';
     JwtModule,
     LeavesModule,
     OnDutyModule,
-    MongooseModule.forFeature([{ name: Attendance.name, schema: AttendanceSchema }]),
+    MongooseModule.forFeature([{ name: Attendance.name, schema: AttendanceSchema },
+        { name: AttendanceSummary.name, schema: AttendanceSummarySchema },
+
+    ]),
     HRModule
   ],
   providers: [AttendanceService, AttendanceCron],

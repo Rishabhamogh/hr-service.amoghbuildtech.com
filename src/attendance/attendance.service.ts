@@ -54,7 +54,12 @@ if(employeeCode && machineNumber){
     
   switch(role){
         case Roles.ADMIN:
-       console.log("ADMIN")
+          if(employeeCode ){
+
+           let res= this.filterData([employeeCode],["machineNumber"],response,  fromDate,toDate)
+           return res
+          }
+      //  console.log("ADMIN")
         break;
         case Roles.MANAGER:
         case Roles.TEAM_LEAD:
@@ -318,7 +323,7 @@ let resultArr=[]
 
     let OnDuty=await this.ODService.findAllWithouPagination(leavesFilter)
  let hrStatusQuery = {}; 
-          hrStatusQuery['userId'] = Types.ObjectId.createFromHexString(user?._id)
+        if(user?._id)  hrStatusQuery['userId'] = Types.ObjectId.createFromHexString(user?._id)
           hrStatusQuery['date'] = { $gte: new Date(fromDate), $lte: new Date(toDate) };
           const hrStatus=    await this.hrstatus.findAllWithouPagination({});
       // Store  logs and user details inside the employeeCode object
@@ -358,7 +363,7 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
     console.log("query",query)
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-        this.attendanceModel.find().skip(skip).limit(limit).sort({ LogDate: -1 }),
+        this.attendanceModel.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
         this.attendanceModel.countDocuments(query)
     ]);
     return {

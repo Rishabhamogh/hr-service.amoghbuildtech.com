@@ -533,6 +533,7 @@ export class UsersService {
     this.logger.debug('Request recieve to change manager of userId:', userId);
     let prevManager = await this.dbService.getOne({ _id: userId })
     // if(prevManager.team.includes(userId))
+   await this.removeFromAllTeams(userId);
     this.logger.debug('Previous manager detail:', prevManager);
     if(prevManager?.managerId) await this.removeFromTeam(prevManager?.managerId, [userId], managerId,feildTochange)
 console.log("prevManager",userId)
@@ -551,6 +552,9 @@ console.log("prevManager",userId)
     }
     this.logger.debug('User removed from all teams successfully');
 
+  }
+  async getAllWithoutPagination(query: any, ) {
+    return await this.dbService.get(query, '');
   }
 
   async logOutFromAllDevices(userId:string){
