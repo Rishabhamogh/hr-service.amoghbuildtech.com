@@ -232,19 +232,20 @@ export class UsersController {
   }
   @UseGuards(AuthGuard)
   @Patch('/v1/user/:id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+ async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     this.logger.log('Request received to update userId: ' + id);
     let role: string = this.contextService.get('role');
     this.accessControlService.check(role, 'users', 'PATCH');
     let idRole=await this.cacheService.getRoleById(id)
-    if((idRole===Roles.TEAM_LEAD ||idRole===Roles.AGENT)  && updateUserDto?.role && (updateUserDto?.role===Roles.MANAGER || updateUserDto?.role===Roles.TEAM_LEAD)){
+    if((idRole===Roles.TEAM_LEAD ||idRole===Roles.AGENT)  && updateUserDto?.role && (updateUserDto?.role===Roles.MANAGER || updateUserDto?.role===Roles.TEAM_LEAD) 
+      && (updateUserDto.managerId || updateUserDto.teamLeadId) ){
             //  let mangerId=await this.cacheService.getManagerById(id)
             this.logger.log("id role",idRole)
-             await this.usersService.removeFromAllTeams(id)
+            //  await this.usersService.removeFromAllTeams(id)
     // await   this.removeFromTeam({userIds:[id]},mangerId)
     }
 
-    if ((updateUserDto.managerId || updateUserDto.teamLeadId) && !updateUserDto?.role && !updateUserDto?.changeTLManager) {
+    if ((updateUserDto.managerId || updateUserDto.teamLeadId)  && !updateUserDto?.changeTLManager) {
       await this.cacheService.getRoleById(id)
       await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
 
@@ -258,10 +259,12 @@ export class UsersController {
       if(updateUserDto?.changeTLManager!=="team"){
       //  let mangerId=await this.cacheService.getManagerById()
       let team=await  this.cacheService.getTeamByManager(id)
+      let managerId=await this.cacheService.getManagerById(id)
       console.log("change team",team)
      await Promise.all( team.map(async(userId:any)=>{
-       await  this.usersService.changeManager(userId,updateUserDto?.managerId,"managerId")
+       await  this.usersService.changeManager(userId,managerId,"managerId")
       }))
+    await  this.usersService.changeManager(id,updateUserDto?.managerId,"managerId")
     //  await this.addToTeam(mangerId,{userIds:team})
 
     // await  this.removeFromTeam({userIds:team},id) 
@@ -301,7 +304,6 @@ export class UsersController {
           }
         }));
       }
-      // Handle removed items
       this.logger.log("remove item",removedItems)
       if (removedItems.length) {
         this.logger.log("remove",removedItems)
@@ -324,6 +326,7 @@ export class UsersController {
     await this.reloadService.updateUser(id)
     return response;
   }
+
 
   @UseGuards(AuthGuard)
   @Patch('/v1/user-manager/:id')
