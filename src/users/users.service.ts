@@ -231,9 +231,7 @@ export class UsersService {
 
   async addToTeam(id: string, userIds: string[]) {
     try {
-      this.logger.log(
-        `Request received to add ${userIds.toString()} in team of ${id}`,
-      );
+   
       let manager=await this.findOne({_id:id})
       this.logger.debug('Manager details:', manager);
       for (let idx of userIds) {
@@ -510,7 +508,7 @@ export class UsersService {
     let response = await Promise.all(userIds.map(async (userId) => {
       await this.dbService.removeFromArray(id, 'team', userId)
       this.logger.debug('update managerID:', managerId);
-      this.logger.debug('feild to change:', feildTochange, );
+      this.logger.debug('feild change', feildTochange );
 
     await this.dbService.updateOne(userId, { feildTochange : managerId ? managerId : '' })
       await this.reloadService.loadTeamByManagerId(managerId)
