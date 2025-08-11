@@ -100,7 +100,7 @@ export class UsersController {
         break;
       case Roles.AGENT: {
         if (department?.includes(Department.HR)) {
-          query['userId'] = userId;
+          //  query['userId'] = userId;
         } else {
           query = {
             _id: userId,
@@ -452,9 +452,9 @@ export class UsersController {
           };
         }
     }
-    if (params?.userId) {
-      query['_id'] = params.userId;
-    }
+    // if (params?.userId) {
+    //   query['_id'] = params.userId;
+    // }
     if (params?.mobile) {
       query['mobile'] = params.mobile;
     }
