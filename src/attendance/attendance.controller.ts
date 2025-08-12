@@ -91,8 +91,86 @@ let query:any={}
                   query['generatedBy']=LoginUserId
                 break
               }
-       return await this.attendenceService.getAttendanceList({ page, limit, employeeCode, fromDate, toDate });
+      //  return await this.attendenceService.getAttendanceList({ page, limit, employeeCode, fromDate, toDate });
                return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
+
+    }
+   
+
+    @Get('summary')
+    async getAttendanceSummary(
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+        @Query('employeeCode') employeeCode?: string,
+        @Query('fromDate') fromDate?: string,
+        @Query('toDate') toDate?: string,
+        @Query() params?: any
+    ) {
+let LoginUserId:any=this.requestContextService.get("userId")
+let role= this.requestContextService.get("role")
+
+let department:any= this.requestContextService.get("department")
+let query:any={}
+        switch(role){
+                case Roles.ADMIN:
+               console.log("ADMIN")
+               if (params?.userId) {
+                 let paramsRole=await this.cacheService.getRoleById(params?.userId)
+                 query['userId'] = params.userId
+                 if (params?.onlyManager) query['userId'] = params.userId
+               else  if (params?.onlyTeamLeader) query['userId'] = params.userId
+                 else {
+                  if(paramsRole===Roles.MANAGER || paramsRole===Roles.TEAM_LEAD){
+                   let userIds: string[] =
+                     await this.cacheService.getTeamByManager(params?.userId);
+                   if (userIds.length) {
+                     userIds.push(params?.userId);
+                     query['userId']= { $in: userIds }
+                   }
+                  }
+                   else query['userId'] = params.userId
+                 }  
+               
+               }
+                break;
+                case Roles.MANAGER:
+                case Roles.TEAM_LEAD:
+                  console.log("MANAGER")
+                  if( department?.includes(Department.HR)){
+                   console.log("HR finance Manger 1")
+                  }
+                  else{
+                    console.log("login",LoginUserId)
+                    let team=await this.cacheService.getTeamByManager(LoginUserId)
+                    console.log("tes",team)
+                   
+                
+                    query['userId']= {$in:team}
+                  }
+                  break;
+                
+                case Roles.MARKETING_MANAGER:
+                
+                case Roles.AGENT:
+                  if(department?.includes(Department.HR)){
+                    console.log("AGET finance case 1")
+                  }
+                  else{
+                  
+                    let userData=await this.cacheService.getUserData(LoginUserId)
+                     query['userId']= {$in:[LoginUserId]}
+
+                 
+                    }
+                  break;
+                default:
+                  console.log("default case")
+        
+                  // query['generatedBy']=LoginUserId
+                break
+              }
+       return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate });
+              //  return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
 
     }
 }

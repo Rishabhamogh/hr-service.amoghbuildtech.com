@@ -14,6 +14,7 @@ import { Model } from 'mongoose';
 import { Attendance } from './schemas/attendance.schema';
  import { PipelineStage } from 'mongoose';
 import { HRStausService } from 'src/hr-status/hr-status.service';
+import { AttendanceSummary } from './schemas/attendance-summary.schema';
 
 @Injectable()
 export class AttendanceService {
@@ -28,7 +29,9 @@ export class AttendanceService {
         private ODService:OnDutyService,
         private hrstatus:HRStausService,
 
-        @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>
+        @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>,
+        @InjectModel(Attendance.name) private attendenceSummary: Model<AttendanceSummary>
+
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
 
@@ -375,6 +378,30 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
     };
 }
 
+async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate }) {
+
+    const query: any = {};
+    
+    if (employeeCode) query.EmployeeCode = employeeCode;
+    if (fromDate || toDate) {
+        query.logDate = {};
+        if (fromDate) query.logDate.$gte = new Date(fromDate);
+        if (toDate) query.logDate.$lte = new Date(toDate);
+    }
+    console.log("query",query)
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+        this.attendanceModel.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
+        this.attendanceModel.countDocuments(query)
+    ]);
+    return {
+        data,
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+    };
+}
 async getEmployeeAttendanceDetails(
   query: any,
   fromDate?: string,
