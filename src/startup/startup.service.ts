@@ -48,7 +48,9 @@ export class StartupService implements OnModuleInit {
         managerId: idx?.managerId,
         employeeCode:idx?.employeeCode,
         machineNumber:idx?.machineNumber,
-        _id: idx._id
+        _id: idx._id,
+        isDeleted:idx?.isDeleted
+
 
       };
       employeCode[idx?.employeeCode]={
@@ -56,6 +58,8 @@ export class StartupService implements OnModuleInit {
         workingHours:idx?.workingHours,
         weekEnds:idx?.weekEnds,
         _id:idx._id,
+        isDeleted:idx?.isDeleted
+
       }
 
     }); 
