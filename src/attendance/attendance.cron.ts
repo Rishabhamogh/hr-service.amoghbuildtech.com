@@ -77,53 +77,98 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
-   @Cron('30 23 * * *')
-async generateDailySummary() {
-  console.log('⏰ Starting daily attendance summary...');
+  @Cron(CronExpression.EVERY_DAY_AT_11PM) // Every 30 minutes
+async handleAttendanceAndSummaryDirect() {
+  console.log('⏰ Starting Direct Attendance Summary Process');
 
-  const todayStart = moment().startOf('day').toDate();      // e.g. 2025-08-06T00:00:00.000Z
-  const todayEnd = moment().endOf('day').toDate();          // e.g. 2025-08-06T23:59:59.999Z
+  const todayStart = moment().startOf('day').toDate();
+  const todayEnd = moment().endOf('day').toDate();
+  const dateString = moment(todayStart).format('YYYY-MM-DD');
 
-  const users = await this.userService.getAllWithoutPagination({});           // Make sure this returns all users
+  // Prepare date strings for API
+  const yyyy = todayStart.getFullYear();
+  const mm = String(todayStart.getMonth() + 1).padStart(2, '0');
+  const dd = String(todayStart.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  // 1. Fetch logs from API
+  const apiUrl = `http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${todayStr}&ToDate=${todayStr}`;
+  let apiData: any[] = [];
+
+  try {
+    const ap = await this.httpService.get(apiUrl);
+    apiData = Array.isArray(ap) ? ap : [];
+    // apiData = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('❌ Error fetching attendance API:', error);
+    return;
+  }
+
+  // 2. Get all users
+  const users = await this.userService.getAllWithoutPagination({});
 
   for (const user of users) {
-    const logs = await this.attendanceModel.find({
+    // Filter logs for this user from API directly
+    const logs = apiData
+  .filter(record => {
+    const apiCode = record.EmployeeCode?.toString().trim();
+    const userCode = user.employeeCode?.toString().trim();
+    return apiCode && userCode && apiCode === userCode;
+  })
+  .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime())
+  .map(record => ({
+    logDate: new Date(record.LogDate),
+    serialNumber: record.SerialNumber,
+    punchDirection: record.PunchDirection,
+    temperature: record.Temperature,
+    temperatureState: record.TemperatureState,
+  }));
+    // Check if summary exists for today
+    const existingSummary :any = await this.summaryModel.findOne({
       userId: user._id,
-      logDate: {
-        $gte: todayStart,
-        $lte: todayEnd,
-      },
-    }).sort({ logDate: 1 });
+      date: dateString,
+    });
+this.logger.log(`Processing user: ${user.employeeCode} `,logs);
+    if (existingSummary && existingSummary.logs?.length === logs.length) {
+      continue;
+    }
 
-this.logger.debug(`Processing user ${user._id} — Logs found: ${logs}`);
+    // 3. Calculate attendance status
     let status = 'Absent';
-
     if (logs.length > 0) {
       const firstLog = logs[0].logDate;
       const lastLog = logs[logs.length - 1].logDate;
-      if (logs.length === 1) { status="Missed Punch"}
-      const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
-      if(diffInMs < 1) status="Missed Punch"
-      const diffInHours = diffInMs / (1000 * 60 * 60);
 
+      if (logs.length === 1) status = 'Missed Punch';
+
+      const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
+      if (diffInMs < 1) status = 'Missed Punch';
+
+      const diffInHours = diffInMs / (1000 * 60 * 60);
       if (diffInHours >= 8.5) {
         status = 'Full Day';
       } else if (diffInHours >= 5) {
         status = 'Half Day';
-      } else {
-        status = 'Absent'; 
       }
     }
 
-    await this.summaryModel.create({
-      userId: user._id,
-      logDate: todayStart,
-      logs,
-      status,
-    });
-
+    // 4. Create or update summary
+    if (existingSummary) {
+      existingSummary.logs = logs;
+      existingSummary.status = status;
+      await existingSummary.save();
+    } else {
+      await this.summaryModel.create({
+        userId: user._id,
+        logDate: todayStart,
+        logs,
+        status,
+        date: dateString,
+      });
+    }
   }
 
+  console.log('✅ Direct Attendance Summary Completed');
 }
 
 

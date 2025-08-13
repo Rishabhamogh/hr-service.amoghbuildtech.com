@@ -20,6 +20,9 @@ export class AttendanceSummary {
   @Prop({ required: true })
   logDate: Date;
 
+  @Prop({ required: false })
+  date: string;
+
   @Prop({ type: Array })
   logs: Logs[];
 
@@ -29,3 +32,4 @@ export class AttendanceSummary {
 
 export type AttendanceSummaryDocument = AttendanceSummary & Document;
 export const AttendanceSummarySchema = SchemaFactory.createForClass(AttendanceSummary);
+AttendanceSummarySchema.index({ userId: 1, date: 1 }, { unique: true }); // Ensure unique userId and logDate combination
