@@ -95,6 +95,7 @@ export class UserDbService {
 
   async addToArray(id: string, name: string, payload: any) {
     try {
+      console.log(`Adding to array ${name} for userId: ${id}`, payload);
       const user = await this.users.updateOne(
         { _id: id },
         { $push: { [name]: payload } },

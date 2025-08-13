@@ -236,7 +236,7 @@ export class UsersService {
       this.logger.debug('Manager details:', manager);
       for (let idx of userIds) {
         if(manager?.teams?.includes(idx)) throw new BadRequestException("User already in team")
-        let response = await this.dbService.addToArray(id, 'team', idx);
+        await this.dbService.addToArray(id, 'team', idx);
       }
       this.logger.log('Added to team successfully for userId: ', id);
     } catch (error) {
