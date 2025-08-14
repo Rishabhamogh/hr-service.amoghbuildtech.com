@@ -164,7 +164,7 @@ try {
           const leavesFilter = {};
           leavesFilter['userId']=Types.ObjectId.createFromHexString(user?._id)
           // leavesFilter['status']=LeaveStatus.APPROVED
-          leavesFilter['fromDate'] = { $gte: new Date(fromDate) };
+          leavesFilter ['fromDate'] = { $gte: new Date(fromDate) };
           leavesFilter['toDate'] = { $lte: new Date(toDate) }; 
           
           const leaves = await this.leaves.findAllWithouPagination(leavesFilter);
@@ -379,29 +379,104 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
 }
 
 async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate }) {
+  const matchQuery: any = {};
 
-    const query: any = {};
-    
-    if (employeeCode) query.EmployeeCode = employeeCode;
-    if (fromDate || toDate) {
-        query.logDate = {};
-        if (fromDate) query.logDate.$gte = new Date(fromDate);
-        if (toDate) query.logDate.$lte = new Date(toDate);
-    }
-    console.log("attendence summary",query)
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-        this.attendenceSummary.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
-        this.attendenceSummary.countDocuments(query)
-    ]);
-    return {
-        data,
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-    };
+  if (employeeCode) matchQuery.EmployeeCode = employeeCode;
+  if (fromDate || toDate) {
+    matchQuery.logDate = {};
+    if (fromDate) matchQuery.logDate.$gte = new Date(fromDate);
+    if (toDate) matchQuery.logDate.$lte = new Date(toDate);
+  }
+
+  const skip = (page - 1) * limit;
+
+  // Group logs by employeeCode
+  const groupedLogs = await this.attendenceSummary.aggregate([
+    { $match: matchQuery },
+    { $sort: { logDate: -1 } },
+    {
+      $group: {
+        _id: "$employeeCode",
+        logs: { $push: "$$ROOT" }
+      }
+    },
+    { $skip: skip },
+    { $limit: limit }
+  ]);
+
+  // Filter out null employeeCodes
+  const validGroups = groupedLogs.filter(g => g._id != null);
+
+  const employeeCodes = validGroups.map(e => e._id);
+
+  // Fetch users for these employee codes
+  const users = await this.userService.getAllWithoutPagination({
+    employeeCode: { $in: employeeCodes }
+  });
+
+  // Build results in parallel
+  const resultData = await Promise.all(
+    validGroups.map(async group => {
+      const empCode = group._id;
+      this.logger.log("uuuu",users, empCode);
+      const user = users.find(u => u.employeeCode === empCode.toString());
+      console.log("user",user)
+      if (!user) return null;
+
+      const leavesFilter: any = { userId: user._id };
+      if (fromDate) leavesFilter.fromDate = { $gte: new Date(fromDate) };
+      if (toDate) leavesFilter.toDate = { $lte: new Date(toDate) };
+
+      const [leaves, OnDuty, hrStatus] = await Promise.all([
+        this.leaves.findAllWithouPagination(leavesFilter),
+        this.ODService.findAllWithouPagination(leavesFilter),
+        this.hrstatus.findAllWithouPagination({
+          userId: user._id,
+          ...(fromDate && toDate
+            ? { date: { $gte: new Date(fromDate), $lte: new Date(toDate) } }
+            : {})
+        })
+      ]);
+
+      return {
+        employeeCode: empCode,
+        logs: group.logs,
+        
+        leaves,
+        OnDuty,
+        hrStatus,
+        userDetails: {
+          employeeCode: user.employeeCode,
+          Name: user.name,
+          Department: user.department,
+          userId: user._id,
+          weekEnds: user.weekEnds
+        }
+      };
+    })
+  );
+this.logger.log(`Total groups found: ${resultData.length}`,resultData);
+  // Remove any null entries from skipped users
+  const finalResult = resultData.filter(r => r !== null);
+
+  // Count total groups (excluding null employeeCode)
+  const totalGroups = await this.attendenceSummary.aggregate([
+    { $match: { ...matchQuery, employeeCode: { $ne: null } } },
+    { $group: { _id: "$employeeCode" } },
+    { $count: "total" }
+  ]);
+
+  return {
+    data: finalResult,
+    page,
+    limit,
+    total: totalGroups[0]?.total || 0,
+    totalPages: Math.ceil((totalGroups[0]?.total || 0) / limit)
+  };
 }
+
+
+
 async getEmployeeAttendanceDetails(
   query: any,
   fromDate?: string,

@@ -134,6 +134,7 @@ this.logger.log(`Processing user: ${user.employeeCode} `,logs);
     }
 
     // 3. Calculate attendance status
+    let duration = 0;
     let status = 'Absent';
     if (logs.length > 0) {
       const firstLog = logs[0].logDate;
@@ -145,6 +146,7 @@ this.logger.log(`Processing user: ${user.employeeCode} `,logs);
       if (diffInMs < 1) status = 'Missed Punch';
 
       const diffInHours = diffInMs / (1000 * 60 * 60);
+      duration = diffInHours;
       if (diffInHours >= 8.5) {
         status = 'Full Day';
       } else if (diffInHours >= 5) {
@@ -163,6 +165,8 @@ this.logger.log(`Processing user: ${user.employeeCode} `,logs);
         logDate: todayStart,
         logs,
         status,
+        employeeCode: user.employeeCode,
+        duration: duration,
         date: dateString,
       });
     }

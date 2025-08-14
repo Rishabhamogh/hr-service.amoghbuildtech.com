@@ -20,6 +20,12 @@ export class AttendanceSummary {
   @Prop({ required: true })
   logDate: Date;
 
+  
+  @Prop({ required: true })
+  employeeCode: Date;
+
+  @Prop({ required: true })
+  duration: Date;
   @Prop({ required: false })
   date: string;
 
