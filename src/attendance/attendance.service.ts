@@ -30,7 +30,7 @@ export class AttendanceService {
         private hrstatus:HRStausService,
 
         @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>,
-        @InjectModel(Attendance.name) private attendenceSummary: Model<AttendanceSummary>
+        @InjectModel(AttendanceSummary.name) private attendenceSummary: Model<AttendanceSummary>
 
     ){}
 async getAttendence(fromDate:Date,toDate:Date,userId?:string,employeeCode?:string,machineNumber?:string,page?:number,limit?:number){
@@ -388,7 +388,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
         if (fromDate) query.logDate.$gte = new Date(fromDate);
         if (toDate) query.logDate.$lte = new Date(toDate);
     }
-    console.log("query",query)
+    console.log("attendence summary",query)
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
         this.attendenceSummary.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
