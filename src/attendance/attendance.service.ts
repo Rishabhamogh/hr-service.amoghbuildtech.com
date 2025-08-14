@@ -440,7 +440,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
 
       return {
         employeeCode: empCode,
-        logs: group.logs,
+        attendence: group.logs,
         
         leaves,
         OnDuty,
