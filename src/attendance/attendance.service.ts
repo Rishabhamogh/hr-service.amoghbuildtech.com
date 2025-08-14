@@ -391,8 +391,8 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
     console.log("query",query)
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-        this.attendanceModel.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
-        this.attendanceModel.countDocuments(query)
+        this.attendenceSummary.find(query).skip(skip).limit(limit).sort({ LogDate: -1 }),
+        this.attendenceSummary.countDocuments(query)
     ]);
     return {
         data,
