@@ -111,7 +111,8 @@ let role= this.requestContextService.get("role")
 
 let department:any= this.requestContextService.get("department")
 let query:any={}
-        switch(role){
+console.log("quee",query)
+switch(role){
                 case Roles.ADMIN:
                console.log("ADMIN")
                if (params?.userId) {

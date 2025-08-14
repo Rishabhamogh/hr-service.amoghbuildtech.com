@@ -552,7 +552,7 @@ console.log("prevManager",userId)
 
   }
   async getAllWithoutPagination(query: any, ) {
-    return await this.dbService.get(query, '');
+    return await this.dbService.get(query, 'employeeCode');
   }
 
   async logOutFromAllDevices(userId:string){
