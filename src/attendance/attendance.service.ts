@@ -396,7 +396,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
     { $sort: { logDate: -1 } },
     {
       $group: {
-        _id: "$userId",
+        _id: "$employeeCode",
         logs: { $push: "$$ROOT" }
       }
     },
@@ -415,6 +415,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   });
 
   // Build results in parallel
+  
   const resultData = await Promise.all(
     validGroups.map(async group => {
       const empCode = group._id;
@@ -439,7 +440,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
       ]);
 
       return {
-        employeeCode: user.employeeCode,
+        employeeCode: empCode,
         attendence: group.logs,
         
         leaves,
