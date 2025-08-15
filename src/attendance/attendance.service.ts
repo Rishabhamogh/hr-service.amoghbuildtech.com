@@ -415,6 +415,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   });
 
   // Build results in parallel
+  
   const resultData = await Promise.all(
     validGroups.map(async group => {
       const empCode = group._id;
