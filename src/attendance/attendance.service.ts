@@ -15,6 +15,7 @@ import { Attendance } from './schemas/attendance.schema';
  import { PipelineStage } from 'mongoose';
 import { HRStausService } from 'src/hr-status/hr-status.service';
 import { AttendanceSummary } from './schemas/attendance-summary.schema';
+import moment from 'moment';
 
 @Injectable()
 export class AttendanceService {
@@ -391,6 +392,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   const skip = (page - 1) * limit;
 
   // Group logs by employeeCode
+
   const groupedLogs = await this.attendenceSummary.aggregate([
     { $match: matchQuery },
     { $sort: { logDate: -1 } },
@@ -415,7 +417,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   });
 
   // Build results in parallel
-  
+
   const resultData = await Promise.all(
     validGroups.map(async group => {
       const empCode = group._id;
@@ -603,6 +605,140 @@ const pipeline: PipelineStage[] = [
     totalPages,
     currentPage: page
   };
+}
+
+async handleAttendanceAndSummaryDirect(date:any) {
+  console.log('⏰ Starting Direct Attendance Summary Process');
+  this.logger.log(`Processing date: ${date}`);
+
+  const [year, month, day] = date.split('-').map(Number);
+
+// Start of the day
+const todayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+
+// Format as YYYY-MM-DD
+const yyyy = todayStart.getFullYear();
+const mm = String(todayStart.getMonth() + 1).padStart(2, '0');
+const dd = String(todayStart.getDate()).padStart(2, '0');
+const todayStr = `${yyyy}-${mm}-${dd}`;
+let dateString = todayStr; // Use the formatted date string
+console.log("Start Date:", todayStart); // Wed Aug 13 2025 00:00:00 GMT+0530
+console.log("Formatted:", todayStr); 
+
+  // 1. Fetch logs from API
+  const apiUrl = `http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${todayStr}&ToDate=${todayStr}`;
+  let apiData: any[] = [];
+
+  try {
+    const ap = await this.httpService.get(apiUrl);
+    apiData = Array.isArray(ap) ? ap : [];
+    // apiData = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('❌ Error fetching attendance API:', error);
+    return;
+  }
+
+  // 2. Get all users
+  const users = await this.userService.getAllWithoutPagination({});
+
+  for (const user of users) {
+    // Filter logs for this user from API directly
+    let logs = apiData
+  .filter(record => {
+    const apiCode = record.EmployeeCode?.toString().trim();
+    const userCode = user.employeeCode?.toString().trim();
+    return apiCode && userCode && apiCode === userCode;
+  })
+  .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime())
+  .map(record => ({
+    logDate: new Date(record.LogDate),
+    serialNumber: record.SerialNumber,
+    employeeCode: record.EmployeeCode,
+  }));
+    // Check if summary exists for today
+    const existingSummary :any = await this.attendenceSummary.findOne({
+      userId: user._id,
+      date: dateString,
+    });
+this.logger.log(`Processing user: ${user.employeeCode} `,logs);
+    if (existingSummary && existingSummary.logs?.length === logs.length) {
+      continue;
+    }
+
+    // 3. Calculate attendance status
+    let duration = 0;
+    let status = 'Absent';
+    
+let latePunchBy = 0;
+let earlyExitBy = 0;
+   if (logs.length > 0) {
+  logs = [logs[0], logs[logs.length - 1]];
+
+  const firstLog = logs[0].logDate;
+  const lastLog = logs[logs.length - 1].logDate;
+
+
+  if (logs.length === 1) status = 'Missed Punch';
+
+  const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
+  if (diffInMs < 1) status = 'Missed Punch';
+
+  const diffInHours = diffInMs / (1000 * 60 * 60);
+  duration = diffInHours;
+
+  if (diffInHours >= 8.5) {
+    status = 'Full Day';
+  } else if (diffInHours >= 5) {
+    status = 'Half Day';
+  }
+
+  // --- Substatus logic ---
+
+    const punchInTime = new Date(firstLog);
+    const punchOutTime = new Date(lastLog);
+
+// Late Punch In check (after 10:35 AM)
+const latePunchInThreshold = new Date(punchInTime);
+latePunchInThreshold.setHours(10, 35, 0, 0);
+
+if (punchInTime > latePunchInThreshold) {
+  const diffMs = punchInTime.getTime() - latePunchInThreshold.getTime();
+  latePunchBy = Math.floor(diffMs / 60000); // convert ms to minutes
+}
+
+// Early Exit check (before 7:00 PM)
+const earlyExitThreshold = new Date(punchOutTime);
+earlyExitThreshold.setHours(19, 0, 0, 0);
+
+if (punchOutTime < earlyExitThreshold) {
+  const diffMs = earlyExitThreshold.getTime() - punchOutTime.getTime();
+  earlyExitBy = Math.floor(diffMs / 60000); // convert ms to minutes
+}
+}
+    // 4. Create or update summary
+    if (existingSummary) {
+      existingSummary.logs = logs;
+      existingSummary.status = status;
+      existingSummary.duration = duration;
+      existingSummary.earlyLeftBy = earlyExitBy;
+      existingSummary.lateBy = latePunchBy;
+      await existingSummary.save();
+    } else {
+      await this.attendenceSummary.create({
+        userId: user._id,
+        logDate: dateString,
+        logs,
+        status,
+        employeeCode: user.employeeCode.toString(),
+        duration: duration,
+        earlyLeftBy: earlyExitBy,
+        lateBy: latePunchBy,
+        date: dateString,
+      });
+    }
+  }
+
+  console.log('✅ Direct Attendance Summary Completed');
 }
 
 

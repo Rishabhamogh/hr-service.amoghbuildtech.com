@@ -22,17 +22,21 @@ export class AttendanceSummary {
 
   
   @Prop({ required: true })
-  employeeCode: Date;
+  employeeCode: string;
 
+    @Prop({ required: false })
+  lateBy: number;
+    @Prop({ required: false })
+  earlyLeftBy: number;
   @Prop({ required: true })
-  duration: Date;
+  duration: number;
   @Prop({ required: false })
   date: string;
 
   @Prop({ type: Array })
   logs: Logs[];
 
-  @Prop({ enum: ['Full Day', 'Half Day', 'Absent'], default: 'Absent' })
+  @Prop({ enum: ['Full Day', 'Half Day', 'Absent',"Missed Punch"], default: 'Absent' })
   status: string;
 }
 
