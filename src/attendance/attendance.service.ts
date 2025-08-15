@@ -396,7 +396,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
     { $sort: { logDate: -1 } },
     {
       $group: {
-        _id: "$employeeCode",
+        _id: "$userId",
         logs: { $push: "$$ROOT" }
       }
     },
@@ -439,7 +439,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
       ]);
 
       return {
-        employeeCode: empCode,
+        employeeCode: user.employeeCode,
         attendence: group.logs,
         
         leaves,
