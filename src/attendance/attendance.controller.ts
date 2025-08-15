@@ -174,4 +174,20 @@ switch(role){
               //  return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
 
     }
+
+    @Post('/generate-attendence')
+    async generateAttendence(@Body() params:any){
+      console.log("params",params)
+    function formatDate(date) {
+      date = new Date(date);
+      return date
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+  const dd = String(date.getDate()).padStart(2, '0');
+  // return `${yyyy}-${mm}-${dd}`;
+}
+let date=formatDate(params.date)
+this.attendenceService.handleAttendanceAndSummaryDirect(params.date)
+
+    }
 }
