@@ -17,7 +17,7 @@ export class AttendanceSummary {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   logDate: Date;
 
   
