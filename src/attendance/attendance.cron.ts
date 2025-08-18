@@ -77,7 +77,7 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
-  @Cron(CronExpression.EVERY_30_SECONDS) // Every 30 minutes
+  @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
 async handleAttendanceAndSummaryDirect() {
   console.log('⏰ Starting Direct Attendance Summary Process');
 
@@ -110,23 +110,24 @@ async handleAttendanceAndSummaryDirect() {
   for (const user of users) {
     // Filter logs for this user from API directly
     let logs = apiData
-  .filter(record => {
-    const apiCode = record.EmployeeCode?.toString().trim();
-    const userCode = user.employeeCode?.toString().trim();
-    return apiCode && userCode && apiCode === userCode;
-  })
-  .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime())
-  .map(record => ({
-    logDate: new Date(record.LogDate),
-    serialNumber: record.SerialNumber,
-    employeeCode: record.EmployeeCode,
-  }));
+      .filter(record => {
+        const apiCode = record.EmployeeCode?.toString().trim();
+        const userCode = user.employeeCode?.toString().trim();
+        return apiCode && userCode && apiCode === userCode;
+      })
+      .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime())
+      .map(record => ({
+        logDate: new Date(record.LogDate),
+        serialNumber: record.SerialNumber,
+        employeeCode: record.EmployeeCode,
+      }));
+
     // Check if summary exists for today
-    const existingSummary :any = await this.summaryModel.findOne({
+    const existingSummary: any = await this.summaryModel.findOne({
       userId: user._id,
       date: dateString,
     });
-this.logger.log(`Processing user: ${user.employeeCode} `,logs);
+    this.logger.log(`Processing user: ${user.employeeCode} `, logs);
     if (existingSummary && existingSummary.logs?.length === logs.length) {
       continue;
     }
@@ -134,53 +135,56 @@ this.logger.log(`Processing user: ${user.employeeCode} `,logs);
     // 3. Calculate attendance status
     let duration = 0;
     let status = 'Absent';
-    
-let latePunchBy = 0;
-let earlyExitBy = 0;
-   if (logs.length > 0) {
-  logs = [logs[0], logs[logs.length - 1]];
+    let subStatus = null;
+    let latePunchBy = 0;
+    let earlyExitBy = 0;
 
-  const firstLog = logs[0].logDate;
-  const lastLog = logs[logs.length - 1].logDate;
+    if (logs.length === 0) {
+      status = 'Absent';
+      subStatus = 'No logs';
+    } else if (logs.length === 1) {
+      status = 'Missed Punch';
+      subStatus = 'Only one punch';
+    } else if (logs.length > 1) {
+      // Use first and last log for calculations
+      const firstLog = logs[0].logDate;
+      const lastLog = logs[logs.length - 1].logDate;
+      const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
+      if (diffInMs < 1) {
+        status = 'Missed Punch';
+        subStatus = 'Invalid punch sequence';
+      } else {
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        duration = diffInHours;
+        if (diffInHours >= 8.5) {
+          status = 'Full Day';
+        } else if (diffInHours >= 5) {
+          status = 'Half Day';
+        } else {
+          status = 'Short Hours';
+          subStatus = 'Worked less than half day';
+        }
 
+        // Late Punch In check (after 10:35 AM)
+        const punchInTime = new Date(firstLog);
+        const latePunchInThreshold = new Date(punchInTime);
+        latePunchInThreshold.setHours(10, 35, 0, 0);
+        if (punchInTime > latePunchInThreshold) {
+          const diffMs = punchInTime.getTime() - latePunchInThreshold.getTime();
+          latePunchBy = Math.floor(diffMs / 60000); // convert ms to minutes
+        }
 
-  if (logs.length === 1) status = 'Missed Punch';
+        // Early Exit check (before 7:00 PM)
+        const punchOutTime = new Date(lastLog);
+        const earlyExitThreshold = new Date(punchOutTime);
+        earlyExitThreshold.setHours(19, 0, 0, 0);
+        if (punchOutTime < earlyExitThreshold) {
+          const diffMs = earlyExitThreshold.getTime() - punchOutTime.getTime();
+          earlyExitBy = Math.floor(diffMs / 60000); // convert ms to minutes
+        }
+      }
+    }
 
-  const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
-  if (diffInMs < 1) status = 'Missed Punch';
-
-  const diffInHours = diffInMs / (1000 * 60 * 60);
-  duration = diffInHours;
-
-  if (diffInHours >= 8.5) {
-    status = 'Full Day';
-  } else if (diffInHours >= 5) {
-    status = 'Half Day';
-  }
-
-  // --- Substatus logic ---
-
-    const punchInTime = new Date(firstLog);
-    const punchOutTime = new Date(lastLog);
-
-// Late Punch In check (after 10:35 AM)
-const latePunchInThreshold = new Date(punchInTime);
-latePunchInThreshold.setHours(10, 35, 0, 0);
-
-if (punchInTime > latePunchInThreshold) {
-  const diffMs = punchInTime.getTime() - latePunchInThreshold.getTime();
-  latePunchBy = Math.floor(diffMs / 60000); // convert ms to minutes
-}
-
-// Early Exit check (before 7:00 PM)
-const earlyExitThreshold = new Date(punchOutTime);
-earlyExitThreshold.setHours(19, 0, 0, 0);
-
-if (punchOutTime < earlyExitThreshold) {
-  const diffMs = earlyExitThreshold.getTime() - punchOutTime.getTime();
-  earlyExitBy = Math.floor(diffMs / 60000); // convert ms to minutes
-}
-}
     // 4. Create or update summary
     if (existingSummary) {
       existingSummary.logs = logs;
@@ -188,15 +192,17 @@ if (punchOutTime < earlyExitThreshold) {
       existingSummary.duration = duration;
       existingSummary.earlyLeftBy = earlyExitBy;
       existingSummary.lateBy = latePunchBy;
+      existingSummary.subStatus = subStatus;
       await existingSummary.save();
     } else {
       await this.summaryModel.create({
         userId: user._id,
-        logDate: dateString,
+        logDate: logs[0]?.logDate || new Date(),
         logs,
         status,
-        employeeCode: user.employeeCode.toString(),
-        duration: duration,
+        subStatus,
+        employeeCode: user.employeeCode?.toString(),
+        duration,
         earlyLeftBy: earlyExitBy,
         lateBy: latePunchBy,
         date: dateString,
