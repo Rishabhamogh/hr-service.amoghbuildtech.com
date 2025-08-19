@@ -108,7 +108,8 @@ let query:any={}
     ) {
 let LoginUserId:any=this.requestContextService.get("userId")
 let role= this.requestContextService.get("role")
-
+limit=Number(limit)
+page=Number(page)
 let department:any= this.requestContextService.get("department")
 let query:any={}
 console.log("quee",query)
