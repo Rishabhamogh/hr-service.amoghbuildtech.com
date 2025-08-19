@@ -382,7 +382,7 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
 async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate }) {
   const matchQuery: any = {};
 
-  if (employeeCode) matchQuery.EmployeeCode = employeeCode;
+  if (employeeCode) matchQuery.employeeCode = employeeCode;
   if (fromDate || toDate) {
     matchQuery.logDate = {};
     if (fromDate) matchQuery.logDate.$gte = new Date(fromDate);
