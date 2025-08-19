@@ -96,8 +96,8 @@ async handleAttendanceAndSummaryDirect() {
   let apiData: any[] = [];
 
   try {
-    const ap = await this.httpService.get(apiUrl);
-    apiData = Array.isArray(ap) ? ap : [];
+    let apiData = await this.httpService.get(apiUrl);
+    apiData = Array.isArray(apiData) ? apiData : [];
     // apiData = Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('❌ Error fetching attendance API:', error);
@@ -106,7 +106,8 @@ async handleAttendanceAndSummaryDirect() {
 
   // 2. Get all users
   const users = await this.userService.getAllWithoutPagination({});
-
+  this.logger.log("uuu",users)
+  this.logger.log(`Total logs found: ${apiData.length}`);
   for (const user of users) {
     // Filter logs for this user from API directly
     let logs = apiData
