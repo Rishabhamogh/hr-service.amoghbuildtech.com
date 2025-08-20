@@ -77,6 +77,7 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
+  // @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
   @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
 async handleAttendanceAndSummaryDirect() {
   console.log('⏰ Starting Direct Attendance Summary Process');
@@ -96,8 +97,8 @@ async handleAttendanceAndSummaryDirect() {
   let apiData: any[] = [];
 
   try {
-     apiData = await this.httpService.get(apiUrl);
-    apiData = Array.isArray(apiData) ? apiData : [];
+    const ap = await this.httpService.get(apiUrl);
+    apiData = Array.isArray(ap) ? ap : [];
     // apiData = Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('❌ Error fetching attendance API:', error);
@@ -106,10 +107,12 @@ async handleAttendanceAndSummaryDirect() {
 
   // 2. Get all users
   const users = await this.userService.getAllWithoutPagination({});
-  this.logger.log("uuuser ",users)
   this.logger.log(`Total logs found: ${apiData.length}`);
   for (const user of users) {
-    // Filter logs for this user from API directly
+    if (!user?.employeeCode) {
+    this.logger.warn(`⚠️ Skipping user without employeeCode: ${user?._id}`,user);
+    continue; // go to next loop iteration
+  }
     let logs = apiData
       .filter(record => {
         const apiCode = record.EmployeeCode?.toString().trim();
@@ -162,7 +165,7 @@ async handleAttendanceAndSummaryDirect() {
         } else if (diffInHours >= 5) {
           status = 'Half Day';
         } else {
-          status = 'Short Hours';
+          status = 'Absent';
           subStatus = 'Worked less than half day';
         }
 
@@ -213,6 +216,8 @@ async handleAttendanceAndSummaryDirect() {
 
   console.log('✅ Direct Attendance Summary Completed');
 }
+
+
 
 // @Cron(CronExpression.EVERY_30_SECONDS) // Every 30 minutes
 // async handleAttendanceAndSummaryDirects() {

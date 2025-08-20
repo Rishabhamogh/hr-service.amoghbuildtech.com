@@ -393,17 +393,24 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   // Group logs by employeeCode
 
   const groupedLogs = await this.attendenceSummary.aggregate([
-    { $match: matchQuery },
-    { $sort: { logDate: -1 } },
-    {
-      $group: {
-        _id: "$employeeCode",
-        logs: { $push: "$$ROOT" }
-      }
-    },
-    { $skip: skip },
-    { $limit: limit }
-  ]);
+  { $match: matchQuery },
+  { $sort: { logDate: -1 } },
+  {
+    $group: {
+      _id: "$employeeCode",
+      logs: { $push: "$$ROOT" }
+    }
+  },
+  {
+    $addFields: {
+      numericEmployeeCode: { $toInt: "$_id" } // convert string to int
+    }
+  },
+  { $sort: { numericEmployeeCode: 1 } }, // ✅ numeric sort
+  { $skip: skip },
+  { $limit: limit }
+]);
+
 
   // Filter out null employeeCodes
   const validGroups = groupedLogs.filter(g => g._id != null);
@@ -456,7 +463,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
       };
     })
   );
-this.logger.log(`Total groups found: ${resultData.length}`,resultData);
+this.logger.log(`Total groups found: ${resultData.length}`);
   // Remove any null entries from skipped users
   const finalResult = resultData.filter(r => r !== null);
 
@@ -638,8 +645,13 @@ console.log("Formatted:", todayStr);
 
   // 2. Get all users
   const users = await this.userService.getAllWithoutPagination({});
-
+  
   for (const user of users) {
+    if (!user?.employeeCode) {
+    this.logger.warn(`⚠️ Skipping user without employeeCode: ${user?._id}`,user);
+    continue; // go to next loop iteration
+  }
+
     // Filter logs for this user from API directly
     let logs = apiData
   .filter(record => {
@@ -658,7 +670,7 @@ console.log("Formatted:", todayStr);
       userId: user._id,
       date: dateString,
     });
-this.logger.log(`Processing user: ${user.employeeCode} `,logs);
+this.logger.log(`Processing user: ${user?.employeeCode} `,logs);
     if (existingSummary && existingSummary.logs?.length === logs.length) {
       continue;
     }

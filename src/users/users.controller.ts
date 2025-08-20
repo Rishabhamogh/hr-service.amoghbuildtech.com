@@ -191,6 +191,13 @@ export class UsersController {
     return response;
   }
 
+
+   @Patch('/v1/user/remove-from-all-teams/:userId')
+  async removeAllTeams(@Param('id') userId: string) {
+    const response = await this.usersService.removeFromAllTeams(userId);
+    return response;
+  }
+
   @UseGuards(AuthGuard)
   @Patch('/v1/user/password')
   async changePassword(@Body() dto: ChangePasswordDto) {
