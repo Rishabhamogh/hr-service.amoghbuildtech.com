@@ -193,7 +193,8 @@ export class UsersController {
 
 
    @Patch('/v1/user/remove-from-all-teams/:userId')
-  async removeAllTeams(@Param('id') userId: string) {
+  async removeAllTeams(@Param('userId') userId: string) {
+    if(!userId) throw new BadRequestException("UserId is not valid")
     const response = await this.usersService.removeFromAllTeams(userId);
     return response;
   }
