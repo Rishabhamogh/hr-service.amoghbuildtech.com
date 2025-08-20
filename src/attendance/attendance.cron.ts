@@ -77,6 +77,7 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
+  // @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
   @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
 async handleAttendanceAndSummaryDirect() {
   console.log('⏰ Starting Direct Attendance Summary Process');
@@ -96,8 +97,8 @@ async handleAttendanceAndSummaryDirect() {
   let apiData: any[] = [];
 
   try {
-     apiData = await this.httpService.get(apiUrl);
-    apiData = Array.isArray(apiData) ? apiData : [];
+    const ap = await this.httpService.get(apiUrl);
+    apiData = Array.isArray(ap) ? ap : [];
     // apiData = Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('❌ Error fetching attendance API:', error);
@@ -213,6 +214,8 @@ async handleAttendanceAndSummaryDirect() {
 
   console.log('✅ Direct Attendance Summary Completed');
 }
+
+
 
 // @Cron(CronExpression.EVERY_30_SECONDS) // Every 30 minutes
 // async handleAttendanceAndSummaryDirects() {
