@@ -456,7 +456,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
       };
     })
   );
-this.logger.log(`Total groups found: ${resultData.length}`,resultData);
+this.logger.log(`Total groups found: ${resultData.length}`);
   // Remove any null entries from skipped users
   const finalResult = resultData.filter(r => r !== null);
 

@@ -107,10 +107,12 @@ async handleAttendanceAndSummaryDirect() {
 
   // 2. Get all users
   const users = await this.userService.getAllWithoutPagination({});
-  this.logger.log("uuuser ",users)
   this.logger.log(`Total logs found: ${apiData.length}`);
   for (const user of users) {
-    // Filter logs for this user from API directly
+    if (!user?.employeeCode) {
+    this.logger.warn(`⚠️ Skipping user without employeeCode: ${user?._id}`,user);
+    continue; // go to next loop iteration
+  }
     let logs = apiData
       .filter(record => {
         const apiCode = record.EmployeeCode?.toString().trim();
