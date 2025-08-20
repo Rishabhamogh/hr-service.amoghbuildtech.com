@@ -17,15 +17,29 @@ export class AttendanceSummary {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   logDate: Date;
+
+  
+  @Prop({ required: true })
+  employeeCode: string;
+
+    @Prop({ required: false })
+  lateBy: number;
+    @Prop({ required: false })
+  earlyLeftBy: number;
+  @Prop({ required: true })
+  duration: number;
+  @Prop({ required: false })
+  date: string;
 
   @Prop({ type: Array })
   logs: Logs[];
 
-  @Prop({ enum: ['Full Day', 'Half Day', 'Absent'], default: 'Absent' })
+  @Prop({ enum: ['Full Day', 'Half Day', 'Absent',"Missed Punch"], default: 'Absent' })
   status: string;
 }
 
 export type AttendanceSummaryDocument = AttendanceSummary & Document;
 export const AttendanceSummarySchema = SchemaFactory.createForClass(AttendanceSummary);
+AttendanceSummarySchema.index({ userId: 1, date: 1 }, { unique: true }); // Ensure unique userId and logDate combination

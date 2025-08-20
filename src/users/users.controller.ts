@@ -100,7 +100,7 @@ export class UsersController {
         break;
       case Roles.AGENT: {
         if (department?.includes(Department.HR)) {
-          query['userId'] = userId;
+          //  query['userId'] = userId;
         } else {
           query = {
             _id: userId,
@@ -245,7 +245,7 @@ export class UsersController {
     // await   this.removeFromTeam({userIds:[id]},mangerId)
     }
 
-    if ((updateUserDto.managerId || updateUserDto.teamLeadId)  && !updateUserDto?.changeTLManager) {
+    if ((updateUserDto.managerId || updateUserDto.teamLeadId)  ) {
       await this.cacheService.getRoleById(id)
       await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
 
@@ -255,7 +255,7 @@ export class UsersController {
        updateUserDto.managerId=mangerId
       }
     }
-    if(updateUserDto?.changeTLManager){
+    if(updateUserDto?.changeTLManager) {
       if(updateUserDto?.changeTLManager!=="team"){
       //  let mangerId=await this.cacheService.getManagerById()
       let team=await  this.cacheService.getTeamByManager(id)
@@ -452,9 +452,9 @@ export class UsersController {
           };
         }
     }
-    if (params?.userId) {
-      query['_id'] = params.userId;
-    }
+    // if (params?.userId) {
+    //   query['_id'] = params.userId;
+    // }
     if (params?.mobile) {
       query['mobile'] = params.mobile;
     }
@@ -505,7 +505,7 @@ export class UsersController {
   @Get('/v1/log-out-all-devices/:id')
   async removeFromAllDevices(@Param('id') id: string) {
 
-    let response = []//await  this.usersService.logOutFromAllDevices(id)
+    let response = await  this.usersService.logOutFromAllDevices(id)
     return response
 
   }

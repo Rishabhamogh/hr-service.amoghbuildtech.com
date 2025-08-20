@@ -77,54 +77,260 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
-   @Cron('30 23 * * *')
-async generateDailySummary() {
-  console.log('⏰ Starting daily attendance summary...');
+  @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
+async handleAttendanceAndSummaryDirect() {
+  console.log('⏰ Starting Direct Attendance Summary Process');
 
-  const todayStart = moment().startOf('day').toDate();      // e.g. 2025-08-06T00:00:00.000Z
-  const todayEnd = moment().endOf('day').toDate();          // e.g. 2025-08-06T23:59:59.999Z
+  const todayStart = moment().startOf('day').toDate();
+  const todayEnd = moment().endOf('day').toDate();
+  const dateString = moment(todayStart).format('YYYY-MM-DD');
 
-  const users = await this.userService.getAllWithoutPagination({});           // Make sure this returns all users
+  // Prepare date strings for API
+  const yyyy = todayStart.getFullYear();
+  const mm = String(todayStart.getMonth() + 1).padStart(2, '0');
+  const dd = String(todayStart.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
 
+  // 1. Fetch logs from API
+  const apiUrl = `http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${todayStr}&ToDate=${todayStr}`;
+  let apiData: any[] = [];
+
+  try {
+     apiData = await this.httpService.get(apiUrl);
+    apiData = Array.isArray(apiData) ? apiData : [];
+    // apiData = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('❌ Error fetching attendance API:', error);
+    return;
+  }
+
+  // 2. Get all users
+  const users = await this.userService.getAllWithoutPagination({});
+  this.logger.log("uuuser ",users)
+  this.logger.log(`Total logs found: ${apiData.length}`);
   for (const user of users) {
-    const logs = await this.attendanceModel.find({
+    // Filter logs for this user from API directly
+    let logs = apiData
+      .filter(record => {
+        const apiCode = record.EmployeeCode?.toString().trim();
+        const userCode = user.employeeCode?.toString().trim();
+        return apiCode && userCode && apiCode === userCode;
+      })
+      .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime())
+      .map(record => ({
+        logDate: new Date(record.LogDate),
+        serialNumber: record.SerialNumber,
+        employeeCode: record.EmployeeCode,
+      }));
+
+    // Check if summary exists for today
+    const existingSummary: any = await this.summaryModel.findOne({
       userId: user._id,
-      logDate: {
-        $gte: todayStart,
-        $lte: todayEnd,
-      },
-    }).sort({ logDate: 1 });
+      date: dateString,
+    });
+    this.logger.log(`Processing user: ${user.employeeCode} `, logs);
+    if (existingSummary && existingSummary.logs?.length === logs.length) {
+      continue;
+    }
 
-this.logger.debug(`Processing user ${user._id} — Logs found: ${logs}`);
+    // 3. Calculate attendance status
+    let duration = 0;
     let status = 'Absent';
+    let subStatus = null;
+    let latePunchBy = 0;
+    let earlyExitBy = 0;
 
-    if (logs.length > 0) {
+    if (logs.length === 0) {
+      status = 'Absent';
+      subStatus = 'No logs';
+    } else if (logs.length === 1) {
+      status = 'Missed Punch';
+      subStatus = 'Only one punch';
+    } else if (logs.length > 1) {
+      // Use first and last log for calculations
       const firstLog = logs[0].logDate;
       const lastLog = logs[logs.length - 1].logDate;
-      if (logs.length === 1) { status="Missed Punch"}
       const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
-      if(diffInMs < 1) status="Missed Punch"
-      const diffInHours = diffInMs / (1000 * 60 * 60);
-
-      if (diffInHours >= 8.5) {
-        status = 'Full Day';
-      } else if (diffInHours >= 5) {
-        status = 'Half Day';
+      if (diffInMs < 1) {
+        status = 'Missed Punch';
+        subStatus = 'Invalid punch sequence';
       } else {
-        status = 'Absent'; 
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        duration = diffInHours;
+        if (diffInHours >= 8.5) {
+          status = 'Full Day';
+        } else if (diffInHours >= 5) {
+          status = 'Half Day';
+        } else {
+          status = 'Short Hours';
+          subStatus = 'Worked less than half day';
+        }
+
+        // Late Punch In check (after 10:35 AM)
+        const punchInTime = new Date(firstLog);
+        const latePunchInThreshold = new Date(punchInTime);
+        latePunchInThreshold.setHours(10, 35, 0, 0);
+        if (punchInTime > latePunchInThreshold) {
+          const diffMs = punchInTime.getTime() - latePunchInThreshold.getTime();
+          latePunchBy = Math.floor(diffMs / 60000); // convert ms to minutes
+        }
+
+        // Early Exit check (before 7:00 PM)
+        const punchOutTime = new Date(lastLog);
+        const earlyExitThreshold = new Date(punchOutTime);
+        earlyExitThreshold.setHours(19, 0, 0, 0);
+        if (punchOutTime < earlyExitThreshold) {
+          const diffMs = earlyExitThreshold.getTime() - punchOutTime.getTime();
+          earlyExitBy = Math.floor(diffMs / 60000); // convert ms to minutes
+        }
       }
     }
 
-    await this.summaryModel.create({
-      userId: user._id,
-      logDate: todayStart,
-      logs,
-      status,
-    });
-
+    // 4. Create or update summary
+    if (existingSummary) {
+      existingSummary.logs = logs;
+      existingSummary.status = status;
+      existingSummary.duration = duration;
+      existingSummary.earlyLeftBy = earlyExitBy;
+      existingSummary.lateBy = latePunchBy;
+      existingSummary.subStatus = subStatus;
+      await existingSummary.save();
+    } else {
+      await this.summaryModel.create({
+        userId: user._id,
+        logDate: logs[0]?.logDate || new Date(),
+        logs,
+        status,
+        subStatus,
+        employeeCode: user.employeeCode?.toString(),
+        duration,
+        earlyLeftBy: earlyExitBy,
+        lateBy: latePunchBy,
+        date: dateString,
+      });
+    }
   }
 
+  console.log('✅ Direct Attendance Summary Completed');
 }
+
+// @Cron(CronExpression.EVERY_30_SECONDS) // Every 30 minutes
+// async handleAttendanceAndSummaryDirects() {
+//   console.log('⏰ Starting Direct Attendance Summary Process');
+
+//   const fromDate = '2025-08-08';
+//   const toDate = '2025-08-15';
+
+//   const apiUrl = `http://amogh.ampletrail.com/api/v2/WebAPI/GetDeviceLogs?APIKey=100215012504&FromDate=${fromDate}&ToDate=${toDate}`;
+//   let apiData: any[] = [];
+
+//   try {
+//     const ap = await this.httpService.get(apiUrl);
+//     apiData = Array.isArray(ap) ? ap : [];
+//   } catch (error) {
+//     console.error('❌ Error fetching attendance API:', error);
+//     return;
+//   }
+
+//   const users = await this.userService.getAllWithoutPagination({});
+
+//   for (const user of users) {
+//     // All logs in the date range for this user
+//     let logs = apiData
+//       .filter(record => {
+//         const apiCode = record.EmployeeCode?.toString().trim();
+//         const userCode = user.employeeCode?.toString().trim();
+//         return apiCode && userCode && apiCode === userCode;
+//       })
+//       .sort((a, b) => new Date(a.LogDate).getTime() - new Date(b.LogDate).getTime())
+//       .map(record => ({
+//         logDate: new Date(record.LogDate),
+//         serialNumber: record.SerialNumber,
+//         punchDirection: record.PunchDirection,
+//         temperature: record.Temperature,
+//         temperatureState: record.TemperatureState,
+//       }));
+
+//     if (logs.length === 0) continue;
+
+//     // Take only first punch from first day and last punch from last day in range
+//     logs = [logs[0], logs[logs.length - 1]];
+
+//     // Calculate duration
+//     let duration = 0;
+//     let status = 'Absent';
+//     let subStatus = null;
+
+//     const firstLog = logs[0].logDate;
+//     const lastLog = logs[logs.length - 1].logDate;
+
+//     const diffInMs = new Date(lastLog).getTime() - new Date(firstLog).getTime();
+//     if (diffInMs < 1) status = 'Missed Punch';
+//     else {
+//       const diffInHours = diffInMs / (1000 * 60 * 60);
+//       duration = diffInHours;
+
+//       if (diffInHours >= 8.5) status = 'Full Day';
+//       else if (diffInHours >= 5) status = 'Half Day';
+//       else status = 'Short Hours';
+//     }
+
+//     let latePunchBy = 0;
+// let earlyExitBy = 0;
+//     const punchInTime = new Date(firstLog);
+//     const punchOutTime = new Date(lastLog);
+
+// // Late Punch In check (after 10:35 AM)
+// const latePunchInThreshold = new Date(punchInTime);
+// latePunchInThreshold.setHours(10, 35, 0, 0);
+
+// if (punchInTime > latePunchInThreshold) {
+//   const diffMs = punchInTime.getTime() - latePunchInThreshold.getTime();
+//   latePunchBy = Math.floor(diffMs / 60000); // convert ms to minutes
+// }
+
+// // Early Exit check (before 7:00 PM)
+// const earlyExitThreshold = new Date(punchOutTime);
+// earlyExitThreshold.setHours(19, 0, 0, 0);
+
+// if (punchOutTime < earlyExitThreshold) {
+//   const diffMs = earlyExitThreshold.getTime() - punchOutTime.getTime();
+//   earlyExitBy = Math.floor(diffMs / 60000); // convert ms to minutes
+// }
+
+
+//     // Check if a summary exists for the whole range
+//     const existingSummary: any = await this.summaryModel.findOne({
+//       userId: user._id,
+//       fromDate,
+//       toDate,
+//     });
+
+//     if (existingSummary) {
+//       existingSummary.logs = logs;
+//       existingSummary.status = status;
+//       existingSummary.duration = duration;
+//       existingSummary.earlyExitBy = earlyExitBy;
+//       existingSummary.latePunchBy = latePunchBy;
+
+//       await existingSummary.save();
+//     } else {
+//       await this.summaryModel.create({
+//         userId: user._id,
+//         fromDate,
+//         toDate,
+//         logs,
+//         status,
+//         logDate: new Date(),
+//         employeeCode: user.employeeCode.toString(),
+//         duration,
+//         subStatus,
+//       });
+//     }
+//   }
+
+//   console.log('✅ Direct Attendance Summary Completed');
+// }
 
 
 }

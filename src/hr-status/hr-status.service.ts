@@ -48,6 +48,7 @@ export class HRStausService {
 
     }
     async findOne(query:any){
+      this.logger.log(`Finding HR status for query: ${JSON.stringify(query)}`,query);
         let response=await this.HRStatusDbService.findOne(query)
         return response
     }
