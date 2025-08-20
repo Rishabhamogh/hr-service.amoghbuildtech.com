@@ -548,6 +548,7 @@ console.log("prevManager",userId)
         await this.removeFromTeam(manager._id, [userId], '', 'managerId')
       }
     }
+    await this.update(userId, { 'managerId': '', 'teamLeadId': '' });
     this.logger.debug('User removed from all teams successfully');
 
   }
