@@ -163,7 +163,7 @@ async handleAttendanceAndSummaryDirect() {
         } else if (diffInHours >= 5) {
           status = 'Half Day';
         } else {
-          status = 'Short Hours';
+          status = 'Absent';
           subStatus = 'Worked less than half day';
         }
 

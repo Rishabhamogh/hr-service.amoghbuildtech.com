@@ -638,8 +638,13 @@ console.log("Formatted:", todayStr);
 
   // 2. Get all users
   const users = await this.userService.getAllWithoutPagination({});
-
+  
   for (const user of users) {
+    if (!user?.employeeCode) {
+    this.logger.warn(`⚠️ Skipping user without employeeCode: ${user?._id}`,user);
+    continue; // go to next loop iteration
+  }
+
     // Filter logs for this user from API directly
     let logs = apiData
   .filter(record => {
@@ -658,7 +663,7 @@ console.log("Formatted:", todayStr);
       userId: user._id,
       date: dateString,
     });
-this.logger.log(`Processing user: ${user.employeeCode} `,logs);
+this.logger.log(`Processing user: ${user?.employeeCode} `,logs);
     if (existingSummary && existingSummary.logs?.length === logs.length) {
       continue;
     }
