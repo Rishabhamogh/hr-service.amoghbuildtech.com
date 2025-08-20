@@ -77,7 +77,7 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
-  @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
+  @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
 async handleAttendanceAndSummaryDirect() {
   console.log('⏰ Starting Direct Attendance Summary Process');
 
@@ -96,7 +96,7 @@ async handleAttendanceAndSummaryDirect() {
   let apiData: any[] = [];
 
   try {
-    let apiData = await this.httpService.get(apiUrl);
+     apiData = await this.httpService.get(apiUrl);
     apiData = Array.isArray(apiData) ? apiData : [];
     // apiData = Array.isArray(data) ? data : [];
   } catch (error) {
@@ -106,7 +106,7 @@ async handleAttendanceAndSummaryDirect() {
 
   // 2. Get all users
   const users = await this.userService.getAllWithoutPagination({});
-  this.logger.log("uuu",users)
+  this.logger.log("uuuser ",users)
   this.logger.log(`Total logs found: ${apiData.length}`);
   for (const user of users) {
     // Filter logs for this user from API directly

@@ -90,7 +90,6 @@ if(employeeCode && machineNumber){
            let manager=await this.cacheService.getUserData(LoginUserId)
             employeeCodes.push(manager.employeeCode)
             serialNumbers.push(manager.machineNumber)
-            console.log("uuu",employeeCodes,serialNumbers) 
           let res= await this.filterData(employeeCodes,serialNumbers,response ,fromDate,toDate)
           return res
           }
@@ -421,7 +420,6 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   const resultData = await Promise.all(
     validGroups.map(async group => {
       const empCode = group._id;
-      this.logger.log("uuuu",users, empCode);
       const user = users.find(u => u.employeeCode === empCode.toString());
       console.log("user",user)
       if (!user) return null;
