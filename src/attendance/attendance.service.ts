@@ -378,22 +378,22 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
     };
 }
 
-async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate,query:any }) {
+async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate,query }) {
   let matchQuery: any = {};
 
   // if (employeeCode) matchQuery.employeeCode = employeeCode;
-  matchQuery={...query}
+  
   if (fromDate || toDate) {
     matchQuery.logDate = {};
     if (fromDate) matchQuery.logDate.$gte = new Date(fromDate);
     if (toDate) matchQuery.logDate.$lte = new Date(toDate);
   }
-
+query.logDate = matchQuery.logDate;
   
   const skip = (page - 1) * limit;
 
   // Group logs by employeeCode
-  this.logger.log('Match Query:', matchQuery);
+  this.logger.log('Match Query:', query);
 
   const groupedLogs = await this.attendenceSummary.aggregate([
   { $match: matchQuery },
