@@ -130,6 +130,18 @@ export class UsersController {
     const response = await this.usersService.getTeamDetails(id);
     return response;
   }
+   @UseGuards(AuthGuard)
+  @Get('/v1/user/:id')
+ 
+  async userDetail(@Param('id') id: string) {
+    this.logger.log('Request received to find team of userId: ' + id);
+    if (!id) throw new BadRequestException("Id is not valid")
+    const role: string = this.contextService.get('role');
+    this.accessControlService.check(role, 'users', 'GET');
+    const response = await this.usersService.getOne({_id:id});
+    return response;
+  }
+
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
@@ -253,7 +265,14 @@ export class UsersController {
     // await   this.removeFromTeam({userIds:[id]},mangerId)
     }
 
-    if ((updateUserDto.managerId || updateUserDto.teamLeadId)  ) {
+     if ((updateUserDto.managerId && updateUserDto.teamLeadId)  ) {
+      await this.usersService.changeManager(id, updateUserDto.teamLeadId ,  "teamLeadId" )
+      await this.usersService.update(id, { managerId: updateUserDto.managerId, teamLeadId: updateUserDto.teamLeadId })
+      await this.reloadService.loadTeamByManagerId(updateUserDto.teamLeadId)
+      await this.reloadService.loadTeamByManagerId(updateUserDto.managerId)
+
+    }
+    if ((updateUserDto.managerId && !updateUserDto.teamLeadId) && (!updateUserDto.managerId && updateUserDto.teamLeadId) ) {
       await this.cacheService.getRoleById(id)
       await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
 
