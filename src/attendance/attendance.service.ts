@@ -393,6 +393,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   const skip = (page - 1) * limit;
 
   // Group logs by employeeCode
+  this.logger.log('Match Query:', matchQuery);
 
   const groupedLogs = await this.attendenceSummary.aggregate([
   { $match: matchQuery },

@@ -112,10 +112,10 @@ limit=Number(limit)
 page=Number(page)
 let department:any= this.requestContextService.get("department")
 let query:any={}
-console.log("quee",query)
+console.log('Query Params:', params);
+
 switch(role){
                 case Roles.ADMIN:
-               console.log("ADMIN")
                if (params?.userId) {
                  let paramsRole=await this.cacheService.getRoleById(params?.userId)
                  query['userId'] = params.userId
