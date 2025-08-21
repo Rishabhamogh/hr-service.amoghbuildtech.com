@@ -136,8 +136,7 @@ export class UsersController {
   async userDetail(@Param('id') id: string) {
     this.logger.log('Request received to find team of userId: ' + id);
     if (!id) throw new BadRequestException("Id is not valid")
-    const role: string = this.contextService.get('role');
-    this.accessControlService.check(role, 'users', 'GET');
+  
     const response = await this.usersService.getOne({_id:id});
     return response;
   }
