@@ -131,7 +131,7 @@ export class UsersController {
     return response;
   }
    @UseGuards(AuthGuard)
-  @Get('/v1/user/:id')
+  @Get('/v1/user-details/:id')
  
   async userDetail(@Param('id') id: string) {
     this.logger.log('Request received to find team of userId: ' + id);
