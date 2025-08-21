@@ -171,7 +171,7 @@ switch(role){
                   // query['generatedBy']=LoginUserId
                 break
               }
-       return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate });
+       return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate ,query});
               //  return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
 
     }
