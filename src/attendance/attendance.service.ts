@@ -16,6 +16,7 @@ import { Attendance } from './schemas/attendance.schema';
 import { HRStausService } from 'src/hr-status/hr-status.service';
 import { AttendanceSummary } from './schemas/attendance-summary.schema';
 import moment from 'moment';
+import { toObjectId } from 'src/common/utils/utilities';
 
 @Injectable()
 export class AttendanceService {
@@ -389,7 +390,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
     if (toDate) matchQuery.logDate.$lte = new Date(toDate);
   }
 query.logDate = matchQuery.logDate;
-  
+query.userId=  toObjectId(query.userId)
   const skip = (page - 1) * limit;
 
   // Group logs by employeeCode

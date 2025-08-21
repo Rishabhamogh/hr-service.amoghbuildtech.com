@@ -2,6 +2,8 @@ import { BadRequestException } from '@nestjs/common';
 import { createHash } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import { Types } from 'mongoose';
+
 export const createHashValue = (str: string) => {
   if (!str) {
     throw new BadRequestException();
@@ -133,3 +135,10 @@ export const transformKeys = (obj:any, prefix:string) => {
     return newObj;
   }, {});
 };
+
+export function toObjectId(value: string | string[]): Types.ObjectId | Types.ObjectId[] {
+  if (Array.isArray(value)) {
+    return value.map((id) => new Types.ObjectId(id));
+  }
+  return new Types.ObjectId(value);
+}
