@@ -380,31 +380,20 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
 }
 
 async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate,query }) {
-  let matchQuery: any = {};
 
-  // if (employeeCode) matchQuery.employeeCode = employeeCode;
   
   if (fromDate || toDate) {
     query.logDate = {};
     if (fromDate) query.logDate.$gte = new Date(fromDate);
     if (toDate) query.logDate.$lte = new Date(toDate);
   }
-  // query.logDate = matchQuery.logDate;
   let userId=  normalizeUserIdFilter(query.userId)
   this.logger.log("uu",userId)
-  // query.userId=new Types.ObjectId('65d9b0605d92195dbce0b029')
-  // query.userId='65d9b0605d92195dbce0b029'
+ 
   
   const skip = (page - 1) * limit;
-  query.userId = userId;
-  // this.logger.log("userId type:", typeof query.userId, query.userId);
-  //  query = { userId: "65d9b0605d92195dbce0b029" };
+if (userId)  query.userId = userId;
   
-  // // Convert
-  // if (Types.ObjectId.isValid(query.userId)) {
-    //   query.userId = new Types.ObjectId(query.userId);
-    // }
-    // Group logs by employeeCode
     this.logger.log("matchQuery",query)
     console.log("query",query)
 
