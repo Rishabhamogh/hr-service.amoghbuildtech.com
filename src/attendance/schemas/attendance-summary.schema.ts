@@ -14,7 +14,7 @@ class Logs{
 }
 @Schema({ collection: 'attendenceSummary', timestamps: true })
 export class AttendanceSummary {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true })
   userId: Types.ObjectId;
 
   @Prop({ required: false })

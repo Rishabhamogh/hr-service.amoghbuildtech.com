@@ -16,7 +16,7 @@ import { Attendance } from './schemas/attendance.schema';
 import { HRStausService } from 'src/hr-status/hr-status.service';
 import { AttendanceSummary } from './schemas/attendance-summary.schema';
 import moment from 'moment';
-import { toObjectId } from 'src/common/utils/utilities';
+import { normalizeUserIdFilter, } from 'src/common/utils/utilities';
 
 @Injectable()
 export class AttendanceService {
@@ -385,19 +385,31 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   // if (employeeCode) matchQuery.employeeCode = employeeCode;
   
   if (fromDate || toDate) {
-    matchQuery.logDate = {};
-    if (fromDate) matchQuery.logDate.$gte = new Date(fromDate);
-    if (toDate) matchQuery.logDate.$lte = new Date(toDate);
+    query.logDate = {};
+    if (fromDate) query.logDate.$gte = new Date(fromDate);
+    if (toDate) query.logDate.$lte = new Date(toDate);
   }
-query.logDate = matchQuery.logDate;
-query.userId=  toObjectId(query.userId)
+  // query.logDate = matchQuery.logDate;
+  let userId=  normalizeUserIdFilter(query.userId)
+  this.logger.log("uu",userId)
+  // query.userId=new Types.ObjectId('65d9b0605d92195dbce0b029')
+  // query.userId='65d9b0605d92195dbce0b029'
+  
   const skip = (page - 1) * limit;
-
-  // Group logs by employeeCode
-  this.logger.log('Match Query:', query);
+  query.userId = userId;
+  // this.logger.log("userId type:", typeof query.userId, query.userId);
+  //  query = { userId: "65d9b0605d92195dbce0b029" };
+  
+  // // Convert
+  // if (Types.ObjectId.isValid(query.userId)) {
+    //   query.userId = new Types.ObjectId(query.userId);
+    // }
+    // Group logs by employeeCode
+    this.logger.log("matchQuery",query)
+    console.log("query",query)
 
   const groupedLogs = await this.attendenceSummary.aggregate([
-  { $match: matchQuery },
+  { $match: query },
   { $sort: { logDate: -1 } },
   {
     $group: {
@@ -473,7 +485,7 @@ this.logger.log(`Total groups found: ${resultData.length}`);
 
   // Count total groups (excluding null employeeCode)
   const totalGroups = await this.attendenceSummary.aggregate([
-    { $match: { ...matchQuery, employeeCode: { $ne: null } } },
+    { $match: { ...query, employeeCode: { $ne: null } } },
     { $group: { _id: "$employeeCode" } },
     { $count: "total" }
   ]);
@@ -520,7 +532,7 @@ async getEmployeeAttendanceDetails(
 
 
 const pipeline: PipelineStage[] = [
-  // { $match: matchQuery },
+  { $match: matchQuery },
   {
     $addFields: {
       logDate: {
