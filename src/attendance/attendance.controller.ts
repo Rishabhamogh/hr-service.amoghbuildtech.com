@@ -5,6 +5,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Department, Roles } from 'src/common/constants/constants';
 import { CacheService } from 'src/shared/cache/cache.service';
+import { Types } from 'mongoose';
 
 @UseGuards(AuthGuard)
 @Controller('attendance')
@@ -141,22 +142,20 @@ switch(role){
                 case Roles.MARKETING_MANAGER:
                 
                 case Roles.AGENT:
-                  if(params?.userId){
-                await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
+                  
+                 if( department?.includes(Department.HR)){
+                     if(params?.userId){
+                 query['userId']= await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
+                  }
                   }
                   else{
-                  
-                    let userData=await this.cacheService.getUserData(LoginUserId)
-                     query['userId']= {$in:[LoginUserId]}
-
-                 
+                     query['userId']= LoginUserId
                     }
+                  
                   break;
                 default:
                   console.log("default case")
-        
-                  // query['generatedBy']=LoginUserId
-                break
+                        break
               }
        return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate ,query});
 
