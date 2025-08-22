@@ -408,7 +408,7 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
 
 async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate,query }) {
 
-  
+  this.logger.log('Get Attendance Summary startting',query);
   if (fromDate || toDate) {
     query.logDate = {};
     if (fromDate) query.logDate.$gte = new Date(fromDate);
@@ -416,6 +416,7 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
   }
   if(query.userId){
   let userId=  normalizeUserIdFilter(query.userId)
+  this.logger.log("userId",userId)
  query.userId = userId;
 }
 const skip = (page - 1) * limit;
