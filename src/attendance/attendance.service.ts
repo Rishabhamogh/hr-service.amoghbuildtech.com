@@ -379,6 +379,33 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
     };
 }
 
+  async buildUserIdQuery(
+  userId: string,
+  isSingle: boolean =false,
+): Promise<string | { $in: string[] }> {
+  if (!userId) return null;
+
+  // If only single userId required
+  if (isSingle) return userId;
+
+  // Get role
+  const role = await this.cacheService.getRoleById(userId);
+
+  if (role === Roles.MANAGER || role === Roles.TEAM_LEAD) {
+    const teamUserIds: string[] = await this.cacheService.getTeamByManager(userId);
+
+    if (teamUserIds.length) {
+      teamUserIds.push(userId); // include self
+      return { $in: teamUserIds };
+    }
+  }
+
+  // Default → just return self
+  return userId;
+}
+
+
+
 async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate,query }) {
 
   
