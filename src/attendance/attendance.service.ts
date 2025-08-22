@@ -387,15 +387,13 @@ async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDat
     if (fromDate) query.logDate.$gte = new Date(fromDate);
     if (toDate) query.logDate.$lte = new Date(toDate);
   }
+  if(query.userId){
   let userId=  normalizeUserIdFilter(query.userId)
-  this.logger.log("uu",userId)
- 
-  
-  const skip = (page - 1) * limit;
-if (userId)  query.userId = userId;
+ query.userId = userId;
+}
+const skip = (page - 1) * limit;
   
     this.logger.log("matchQuery",query)
-    console.log("query",query)
 
   const groupedLogs = await this.attendenceSummary.aggregate([
   { $match: query },
@@ -408,7 +406,7 @@ if (userId)  query.userId = userId;
   },
   {
     $addFields: {
-      numericEmployeeCode: { $toInt: "$_id" } // convert string to int
+      numericEmployeeCode: { $toInt: "$employeeCode" } // convert string to int
     }
   },
   { $sort: { numericEmployeeCode: 1 } }, // ✅ numeric sort
