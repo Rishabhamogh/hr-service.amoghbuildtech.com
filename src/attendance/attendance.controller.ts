@@ -116,47 +116,33 @@ console.log('Query Params:', params);
 
 switch(role){
                 case Roles.ADMIN:
-               if (params?.userId) {
-                 let paramsRole=await this.cacheService.getRoleById(params?.userId)
-                 query['userId'] = params.userId
-                 if (params?.onlyManager) query['userId'] = params.userId
-               else  if (params?.onlyTeamLeader) query['userId'] = params.userId
-                 else {
-                  if(paramsRole===Roles.MANAGER || paramsRole===Roles.TEAM_LEAD){
-                   let userIds: string[] =
-                     await this.cacheService.getTeamByManager(params?.userId);
-                   if (userIds.length) {
-                     userIds.push(params?.userId);
-                     query['userId']= { $in: userIds }
-                   }
+                  if(params?.userId){
+                query['userId']= await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
                   }
-                   else query['userId'] = params.userId
-                 }  
-                 console.log("qq",query)
-               
-               }
                 break;
                 case Roles.MANAGER:
                 case Roles.TEAM_LEAD:
                   console.log("MANAGER")
                   if( department?.includes(Department.HR)){
-                   console.log("HR finance Manger 1")
+                     if(params?.userId){
+                 query['userId']= await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
+                  }
                   }
                   else{
-                    console.log("login",LoginUserId)
-                    let team=await this.cacheService.getTeamByManager(LoginUserId)
-                    console.log("tes",team)
+                    if (params?.isSingle) query['userId'] = params.userId
+                   else{ let team=await this.cacheService.getTeamByManager(LoginUserId)
                    
-                
+
                     query['userId']= {$in:team}
+                   }
                   }
                   break;
                 
                 case Roles.MARKETING_MANAGER:
                 
                 case Roles.AGENT:
-                  if(department?.includes(Department.HR)){
-                    console.log("AGET finance case 1")
+                  if(params?.userId){
+                await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
                   }
                   else{
                   
@@ -173,7 +159,6 @@ switch(role){
                 break
               }
        return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate ,query});
-              //  return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
 
     }
 
