@@ -434,7 +434,7 @@ const skip = (page - 1) * limit;
   },
   {
     $addFields: {
-      numericEmployeeCode: { $toInt: "$employeeCode" } // convert string to int
+      numericEmployeeCode: { $toInt: "$_id" } // convert string to int
     }
   },
   { $sort: { numericEmployeeCode: 1 } }, // ✅ numeric sort
