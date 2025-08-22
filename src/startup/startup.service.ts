@@ -39,7 +39,6 @@ export class StartupService implements OnModuleInit {
     let employeCode:any={}
 
     response.forEach((idx: any) => {
-      console.log("iids",idx)
       users[idx._id.toString()] = {
         role: idx.role,
         emailId: idx.emailId,

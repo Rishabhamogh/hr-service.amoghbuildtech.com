@@ -78,7 +78,7 @@ export class AttendanceCron {
     }
   }
   // @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
-  @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
+  // @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
 async handleAttendanceAndSummaryDirect() {
   console.log('⏰ Starting Direct Attendance Summary Process');
 

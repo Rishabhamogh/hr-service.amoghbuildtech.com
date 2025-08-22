@@ -310,7 +310,6 @@ export class UsersController {
       this.logger.log("previous data",userPreviusData?.team)
       const removedItems = userPreviusData?.team.filter(item => !newTeam.includes(item));
       const addedItems = newTeam.filter(item => !userPreviusData?.team.includes(item));
-      this.logger.log("aaded",addedItems)
       if (addedItems.length) {
         let managerId = null;
         if (role === Roles.TEAM_LEAD) {

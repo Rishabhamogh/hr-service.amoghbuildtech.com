@@ -132,6 +132,7 @@ switch(role){
                   }
                    else query['userId'] = params.userId
                  }  
+                 console.log("qq",query)
                
                }
                 break;
