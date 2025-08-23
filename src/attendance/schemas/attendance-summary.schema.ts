@@ -37,7 +37,7 @@ export class AttendanceSummary {
   @Prop({ type: Array })
   logs: Logs[];
 
-  @Prop({ enum: ['Full Day', 'Half Day', 'Absent', "Missed Punch"], default: 'Absent' })
+  @Prop({ enum: ['Full Day', 'Half Day', 'Absent', "Missed Punch","Present"], default: 'Absent' })
   status: string;
 }
 

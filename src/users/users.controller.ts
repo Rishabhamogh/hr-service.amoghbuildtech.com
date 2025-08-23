@@ -61,12 +61,12 @@ export class UsersController {
       await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
 
     }
-    else if ((createUserDto.managerId || !createUserDto.teamLeadId) && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
-      await this.usersService.addToTeam(createUserDto.managerId, [response._id.toString()])
-      await this.usersService.update(response._id,{managerId:createUserDto.managerId})
+    // else if ((createUserDto.managerId || !createUserDto.teamLeadId) && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
+    //   await this.usersService.addToTeam(createUserDto.managerId, [response._id.toString()])
+    //   await this.usersService.update(response._id,{managerId:createUserDto.managerId})
 
-      await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
-    }
+    //   await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
+    // }
     return response;
   }
   @UseGuards(AuthGuard)
