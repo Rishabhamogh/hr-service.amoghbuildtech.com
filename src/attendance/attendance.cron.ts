@@ -77,8 +77,8 @@ export class AttendanceCron {
       console.error('Error processing attendance records:', error);
     }
   }
-  @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
   // @Cron(CronExpression.EVERY_10_MINUTES) // Every 30 minutes
+  @Cron(CronExpression.EVERY_30_MINUTES) // Every 30 minutes
   async handleAttendanceAndSummaryDirect() {
     console.log('⏰ Starting Direct Attendance Summary Process');
 
