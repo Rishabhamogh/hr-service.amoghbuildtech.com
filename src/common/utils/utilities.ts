@@ -2,6 +2,8 @@ import { BadRequestException } from '@nestjs/common';
 import { createHash } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import { Types } from 'mongoose';
+
 export const createHashValue = (str: string) => {
   if (!str) {
     throw new BadRequestException();
@@ -133,3 +135,33 @@ export const transformKeys = (obj:any, prefix:string) => {
     return newObj;
   }, {});
 };
+
+
+export function normalizeUserIdFilter(queryUserId: any) {
+  if (!queryUserId) return {};
+
+  // Case 1: If it's already using $in
+  if (queryUserId.$in && Array.isArray(queryUserId.$in)) {
+    return {
+      $in: queryUserId.$in
+        .filter((id: string) => Types.ObjectId.isValid(id))
+        .map((id: string) => new Types.ObjectId(id)),
+    };
+  }
+
+  // Case 2: Plain string
+  if (typeof queryUserId === 'string' && Types.ObjectId.isValid(queryUserId)) {
+    return new Types.ObjectId(queryUserId);
+  }
+
+  // Case 3: Array of strings
+  if (Array.isArray(queryUserId)) {
+    return {
+      $in: queryUserId
+        .filter((id) => Types.ObjectId.isValid(id))
+        .map((id) => new Types.ObjectId(id)),
+    };
+  }
+
+  return {};
+}

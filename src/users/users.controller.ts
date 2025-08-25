@@ -61,12 +61,12 @@ export class UsersController {
       await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
 
     }
-    else if ((createUserDto.managerId || !createUserDto.teamLeadId) && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
-      await this.usersService.addToTeam(createUserDto.managerId, [response._id.toString()])
-      await this.usersService.update(response._id,{managerId:createUserDto.managerId})
+    // else if ((createUserDto.managerId || !createUserDto.teamLeadId) && (response.role === Roles.AGENT || response.role === Roles.TEAM_LEAD)) {
+    //   await this.usersService.addToTeam(createUserDto.managerId, [response._id.toString()])
+    //   await this.usersService.update(response._id,{managerId:createUserDto.managerId})
 
-      await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
-    }
+    //   await this.reloadService.loadTeamByManagerId(createUserDto.managerId)
+    // }
     return response;
   }
   @UseGuards(AuthGuard)
@@ -130,6 +130,17 @@ export class UsersController {
     const response = await this.usersService.getTeamDetails(id);
     return response;
   }
+   @UseGuards(AuthGuard)
+  @Get('/v1/user-details/:id')
+ 
+  async userDetail(@Param('id') id: string) {
+    this.logger.log('Request received to find team of userId: ' + id);
+    if (!id) throw new BadRequestException("Id is not valid")
+  
+    const response = await this.usersService.getOne({_id:id});
+    return response;
+  }
+
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
@@ -193,7 +204,8 @@ export class UsersController {
 
 
    @Patch('/v1/user/remove-from-all-teams/:userId')
-  async removeAllTeams(@Param('id') userId: string) {
+  async removeAllTeams(@Param('userId') userId: string) {
+    if(!userId) throw new BadRequestException("UserId is not valid")
     const response = await this.usersService.removeFromAllTeams(userId);
     return response;
   }
@@ -252,7 +264,14 @@ export class UsersController {
     // await   this.removeFromTeam({userIds:[id]},mangerId)
     }
 
-    if ((updateUserDto.managerId || updateUserDto.teamLeadId)  ) {
+     if ((updateUserDto.managerId && updateUserDto.teamLeadId)  ) {
+      await this.usersService.changeManager(id, updateUserDto.teamLeadId ,  "teamLeadId" )
+      await this.usersService.update(id, { managerId: updateUserDto.managerId, teamLeadId: updateUserDto.teamLeadId })
+      await this.reloadService.loadTeamByManagerId(updateUserDto.teamLeadId)
+      await this.reloadService.loadTeamByManagerId(updateUserDto.managerId)
+
+    }
+    if ((updateUserDto.managerId && !updateUserDto.teamLeadId) && (!updateUserDto.managerId && updateUserDto.teamLeadId) ) {
       await this.cacheService.getRoleById(id)
       await this.usersService.changeManager(id, updateUserDto.managerId ? updateUserDto.managerId : updateUserDto.teamLeadId, updateUserDto.teamLeadId ? "teamLeadId" : "managerId")
 
@@ -291,7 +310,6 @@ export class UsersController {
       this.logger.log("previous data",userPreviusData?.team)
       const removedItems = userPreviusData?.team.filter(item => !newTeam.includes(item));
       const addedItems = newTeam.filter(item => !userPreviusData?.team.includes(item));
-      this.logger.log("aaded",addedItems)
       if (addedItems.length) {
         let managerId = null;
         if (role === Roles.TEAM_LEAD) {

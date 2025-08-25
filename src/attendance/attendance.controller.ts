@@ -5,6 +5,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RequestContextService } from 'src/shared/request-context/request-context.service';
 import { Department, Roles } from 'src/common/constants/constants';
 import { CacheService } from 'src/shared/cache/cache.service';
+import { Types } from 'mongoose';
 
 @UseGuards(AuthGuard)
 @Controller('attendance')
@@ -112,67 +113,51 @@ limit=Number(limit)
 page=Number(page)
 let department:any= this.requestContextService.get("department")
 let query:any={}
-console.log("quee",query)
+console.log('Query Params:', params);
+
 switch(role){
                 case Roles.ADMIN:
-               console.log("ADMIN")
-               if (params?.userId) {
-                 let paramsRole=await this.cacheService.getRoleById(params?.userId)
-                 query['userId'] = params.userId
-                 if (params?.onlyManager) query['userId'] = params.userId
-               else  if (params?.onlyTeamLeader) query['userId'] = params.userId
-                 else {
-                  if(paramsRole===Roles.MANAGER || paramsRole===Roles.TEAM_LEAD){
-                   let userIds: string[] =
-                     await this.cacheService.getTeamByManager(params?.userId);
-                   if (userIds.length) {
-                     userIds.push(params?.userId);
-                     query['userId']= { $in: userIds }
-                   }
+                  if(params?.userId){
+                query['userId']= await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
                   }
-                   else query['userId'] = params.userId
-                 }  
-               
-               }
                 break;
                 case Roles.MANAGER:
                 case Roles.TEAM_LEAD:
                   console.log("MANAGER")
                   if( department?.includes(Department.HR)){
-                   console.log("HR finance Manger 1")
+                     if(params?.userId){
+                 query['userId']= await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
+                  }
                   }
                   else{
-                    console.log("login",LoginUserId)
-                    let team=await this.cacheService.getTeamByManager(LoginUserId)
-                    console.log("tes",team)
+                    if (params?.isSingle) query['userId'] = params.userId
+                   else{ let team=await this.cacheService.getTeamByManager(LoginUserId)
                    
-                
+
                     query['userId']= {$in:team}
+                   }
                   }
                   break;
                 
                 case Roles.MARKETING_MANAGER:
                 
                 case Roles.AGENT:
-                  if(department?.includes(Department.HR)){
-                    console.log("AGET finance case 1")
+                  
+                 if( department?.includes(Department.HR)){
+                     if(params?.userId){
+                 query['userId']= await this.attendenceService.buildUserIdQuery(params.userId,params?.isSingle);
+                  }
                   }
                   else{
-                  
-                    let userData=await this.cacheService.getUserData(LoginUserId)
-                     query['userId']= {$in:[LoginUserId]}
-
-                 
+                     query['userId']= LoginUserId
                     }
+                  
                   break;
                 default:
                   console.log("default case")
-        
-                  // query['generatedBy']=LoginUserId
-                break
+                        break
               }
-       return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate });
-              //  return await this.attendenceService.getEmployeeAttendanceDetails(query,fromDate, toDate );
+       return await this.attendenceService.getAttendanceSummary({ page, limit, employeeCode, fromDate, toDate ,query});
 
     }
 

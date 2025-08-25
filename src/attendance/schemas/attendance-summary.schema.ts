@@ -3,30 +3,31 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 
-class Logs{ 
-     @Prop({ required: true })
-        logDate: Date;
-    @Prop()
-    employeeCode: string;
-    @Prop()
-    userId: string;
+class Logs {
+  @Prop({ required: true })
+  logDate: Date;
+  @Prop()
+  employeeCode: string;
+  @Prop()
+  userId: string;
 
 }
 @Schema({ collection: 'attendenceSummary', timestamps: true })
 export class AttendanceSummary {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Users', required: true })
   userId: Types.ObjectId;
 
   @Prop({ required: false })
   logDate: Date;
 
-  
+
   @Prop({ required: true })
   employeeCode: string;
-
-    @Prop({ required: false })
+  @Prop({ required: false })
+  subStatus: string;
+  @Prop({ required: false })
   lateBy: number;
-    @Prop({ required: false })
+  @Prop({ required: false })
   earlyLeftBy: number;
   @Prop({ required: true })
   duration: number;
@@ -36,7 +37,7 @@ export class AttendanceSummary {
   @Prop({ type: Array })
   logs: Logs[];
 
-  @Prop({ enum: ['Full Day', 'Half Day', 'Absent',"Missed Punch"], default: 'Absent' })
+  @Prop({ enum: ['Full Day', 'Half Day', 'Absent', "Missed Punch","Present"], default: 'Absent' })
   status: string;
 }
 

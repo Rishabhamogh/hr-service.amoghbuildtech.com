@@ -8,7 +8,7 @@ import { UsersService } from 'src/users/users.service';
 import { Types } from 'mongoose';
 import { OnDutyService } from 'src/on-duty/on-duty.service';
 import { console } from 'inspector';
-import e from 'express';
+import e, { query } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Attendance } from './schemas/attendance.schema';
@@ -16,6 +16,7 @@ import { Attendance } from './schemas/attendance.schema';
 import { HRStausService } from 'src/hr-status/hr-status.service';
 import { AttendanceSummary } from './schemas/attendance-summary.schema';
 import moment from 'moment';
+import { normalizeUserIdFilter, } from 'src/common/utils/utilities';
 
 @Injectable()
 export class AttendanceService {
@@ -378,22 +379,52 @@ async getAttendanceList({ page = 1, limit = 10, employeeCode, fromDate, toDate }
     };
 }
 
-async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate }) {
-  const matchQuery: any = {};
+  async buildUserIdQuery(
+  userId: string,
+  isSingle: boolean =false,
+): Promise<string | { $in: string[] }> {
+  if (!userId) return null;
 
-  if (employeeCode) matchQuery.employeeCode = employeeCode;
-  if (fromDate || toDate) {
-    matchQuery.logDate = {};
-    if (fromDate) matchQuery.logDate.$gte = new Date(fromDate);
-    if (toDate) matchQuery.logDate.$lte = new Date(toDate);
+  // If only single userId required
+  if (isSingle) return userId;
+
+  // Get role
+  const role = await this.cacheService.getRoleById(userId);
+
+  if (role === Roles.MANAGER || role === Roles.TEAM_LEAD) {
+    const teamUserIds: string[] = await this.cacheService.getTeamByManager(userId);
+
+    if (teamUserIds.length) {
+      teamUserIds.push(userId); // include self
+      return { $in: teamUserIds };
+    }
   }
 
-  const skip = (page - 1) * limit;
+  // Default → just return self
+  return userId;
+}
 
-  // Group logs by employeeCode
+
+
+async getAttendanceSummary({ page = 1, limit = 10, employeeCode, fromDate, toDate,query }) {
+
+  this.logger.log('Get Attendance Summary startting',query);
+  if (fromDate || toDate) {
+    query.logDate = {};
+    if (fromDate) query.logDate.$gte = new Date(fromDate);
+    if (toDate) query.logDate.$lte = new Date(toDate);
+  }
+  if(query.userId){
+  let userId=  normalizeUserIdFilter(query.userId)
+  this.logger.log("userId",userId)
+ query.userId = userId;
+}
+const skip = (page - 1) * limit;
+  
+    this.logger.log("matchQuery",query)
 
   const groupedLogs = await this.attendenceSummary.aggregate([
-  { $match: matchQuery },
+  { $match: query },
   { $sort: { logDate: -1 } },
   {
     $group: {
@@ -469,7 +500,7 @@ this.logger.log(`Total groups found: ${resultData.length}`);
 
   // Count total groups (excluding null employeeCode)
   const totalGroups = await this.attendenceSummary.aggregate([
-    { $match: { ...matchQuery, employeeCode: { $ne: null } } },
+    { $match: { ...query, employeeCode: { $ne: null } } },
     { $group: { _id: "$employeeCode" } },
     { $count: "total" }
   ]);
@@ -516,7 +547,7 @@ async getEmployeeAttendanceDetails(
 
 
 const pipeline: PipelineStage[] = [
-  // { $match: matchQuery },
+  { $match: matchQuery },
   {
     $addFields: {
       logDate: {
